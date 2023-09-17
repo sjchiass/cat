@@ -120,6 +120,5 @@ distorted_ellipse(draw, (1700, 2000), (2100, 2400), (1800, 2200), (9, 121, 105),
 # Right pupil
 draw.ellipse(xy=[(1850, 2100), (1950, 2300)], fill=(0, 0, 0))
 
-# In Jupyter, this will display the image
-# In regular Python it will create a pop-up
-image.show()
+# Save the image for easier git versioning
+image.save("cat.png")
