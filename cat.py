@@ -8,90 +8,118 @@ image = Image.new("RGB", (3000, 3500), (255, 255, 255))
 # Use the draw object to draw objects
 draw = ImageDraw.Draw(image)
 
+# Define a disorted re-centered ellipse
+def distorted_ellipse(draw_obj, topleft_xy, bottomright_xy, center_xy, fill_rgb, quadrants=(True, True, True, True), stroke_width=(0, 0, 0, 0)):
+    # Given a corner and a center, determine the opposiste corner
+    # If you draw this on paper, the other corner is on the opposite side of the center
+    # that the original corner is
+    def opposite_corner(corner, center):
+        return (2*center[0] - corner[0], 2*center[1] - corner[1])
+    # Top left
+    if quadrants[0]:
+        draw_obj.pieslice(xy=[topleft_xy,
+                            opposite_corner(topleft_xy, center_xy)],
+                            start=180,
+                            end=270,
+                            fill=fill_rgb)
+        if stroke_width[0]:
+            draw_obj.arc(xy=[topleft_xy,
+                            opposite_corner(topleft_xy, center_xy)],
+                            start=180,
+                            end=270,
+                            fill="black",
+                            width=stroke_width[0])
+    # Top right
+    if quadrants[1]:
+        topright_xy = (bottomright_xy[0], topleft_xy[1])
+        topright_xy_opp = opposite_corner(topright_xy, center_xy)
+        draw_obj.pieslice(xy=[(topright_xy_opp[0], topright_xy[1]),
+                            (topright_xy[0], topright_xy_opp[1])],
+                            start=270,
+                            end=0,
+                            fill=fill_rgb)
+        if stroke_width[1]:
+            draw_obj.arc(xy=[(topright_xy_opp[0], topright_xy[1]),
+                            (topright_xy[0], topright_xy_opp[1])],
+                            start=270,
+                            end=0,
+                            fill="black",
+                            width=stroke_width[1])
+    # Bottom right
+    if quadrants[2]:
+        bottomright_xy_opp = opposite_corner(bottomright_xy, center_xy)
+        draw_obj.pieslice(xy=[(bottomright_xy_opp[0], bottomright_xy_opp[1]),
+                            (bottomright_xy[0], bottomright_xy[1])],
+                            start=0,
+                            end=90,
+                            fill=fill_rgb)
+        if stroke_width[2]:
+            draw_obj.arc(xy=[(bottomright_xy_opp[0], bottomright_xy_opp[1]),
+                            (bottomright_xy[0], bottomright_xy[1])],
+                            start=0,
+                            end=90,
+                            fill="black",
+                            width=stroke_width[2])
+    # Bottom left
+    if quadrants[3]:
+        bottomleft_xy = (topleft_xy[0], bottomright_xy[1])
+        bottomleft_xy_opp = opposite_corner(bottomleft_xy, center_xy)
+        draw_obj.pieslice(xy=[(bottomleft_xy[0], bottomleft_xy_opp[1]),
+                            (bottomleft_xy_opp[0], bottomleft_xy[1])],
+                            start=90,
+                            end=180,
+                            fill=fill_rgb)
+        if stroke_width[3]:
+            draw_obj.arc(xy=[(bottomleft_xy[0], bottomleft_xy_opp[1]),
+                            (bottomleft_xy_opp[0], bottomleft_xy[1])],
+                            start=90,
+                            end=180,
+                            fill="black",
+                            width=stroke_width[3])
+
 # Background
 draw.ellipse(xy=[(500, 1500), (2500, 3500)],
          fill=(205, 127, 50),
          width=5)
 
 # Chin
-draw.ellipse(xy=[(1300, 3000), (1700, 3200)], fill=(227, 150, 62))
+draw.ellipse(xy=[(1300, 3000), (1700, 3300)], fill=(227, 150, 62))
 
 # Left cheek
-draw.pieslice(xy=[(1000, 2500), (1700, 3100)],
-              start=90,
-              end=180,
-              fill=(242, 140, 40))
-draw.arc(xy=[(1000, 2500), (1700, 3100)],
-              start=90,
-              end=180,
-              fill=(0, 0, 0),
-              width=15)
-
-draw.pieslice(xy=[(1100, 2900), (1500, 3100)],
-              start=0,
-              end=90,
-              fill=(242, 140, 40))
-draw.arc(xy=[(1100, 2900), (1500, 3100)],
-              start=0,
-              end=90,
-              fill=(0, 0, 0),
-              width=15)
-
-draw.pieslice(xy=[(1100, 2800), (1500, 3200)],
-              start=270,
-              end=0,
-              fill=(242, 140, 40))
+distorted_ellipse(draw, (1000, 2700), (1500, 3100), (1200, 2900), (242, 140, 40), stroke_width=[0, 0, 15, 15])
 
 # Right cheek
-draw.pieslice(xy=[(1400, 2500), (2000, 3100)],
-              start=0,
-              end=90,
-              fill=(242, 140, 40))
-draw.arc(xy=[(1400, 2500), (2000, 3100)],
-              start=0,
-              end=90,
-              fill=(0, 0, 0),
-              width=15)
+distorted_ellipse(draw, (1500, 2700), (2000, 3100), (1800, 2900), (242, 140, 40), stroke_width=[0, 0, 15, 15])
 
-draw.pieslice(xy=[(1500, 2900), (1900, 3100)],
-              start=90,
-              end=180,
-              fill=(242, 140, 40))
-draw.arc(xy=[(1500, 2900), (1900, 3100)],
-              start=90,
-              end=180,
-              fill=(0, 0, 0),
-              width=15)
+# Left ear
+distorted_ellipse(draw, (500, 1100), (1300, 2200), (700, 1800), (205, 127, 50), quadrants=(True, True, True, True))
+# Left ear inside
+distorted_ellipse(draw, (600, 1200), (1000, 1800), (700, 1600), (184, 115, 51), quadrants=(True, True, True, True))
 
-draw.pieslice(xy=[(1500, 2800), (1900, 3200)],
-              start=180,
-              end=270,
-              fill=(242, 140, 40))
+# Right ear
+distorted_ellipse(draw, (1700, 1100), (2500, 2200), (2300, 1800), (205, 127, 50), quadrants=(True, True, True, True))
+# Right ear inside
+distorted_ellipse(draw, (2000, 1200), (2400, 1800), (2300, 1600), (184, 115, 51), quadrants=(True, True, True, True))
 
 # Nose
 # Upper lip
-draw.line(xy=[(1500, 2800), (1500, 3000)], fill=(0, 0, 0), width=15)
+draw.line(xy=[(1500, 2800), (1500, 2900)], fill=(0, 0, 0), width=15)
 # Actual nose
 draw.polygon(xy=[(1300, 2600), (1500, 2800), (1700, 2600)], fill=(160, 82, 45))
 
 # Left eye
-draw.ellipse(xy=[(900, 2000), (1300, 2400)], fill=(9, 121, 105))
+distorted_ellipse(draw, (900, 2000), (1300, 2400), (1000, 2200), (9, 121, 105), quadrants=(True, True, False, False))
+distorted_ellipse(draw, (900, 2000), (1300, 2400), (1200, 2200), (9, 121, 105), quadrants=(False, False, True, True))
 # Left pupil
 draw.ellipse(xy=[(1050, 2100), (1150, 2300)], fill=(0, 0, 0))
 
 # Right eye
-draw.ellipse(xy=[(1700, 2000), (2100, 2400)], fill=(9, 121, 105))
+# draw.ellipse(xy=[(1700, 2000), (2100, 2400)], fill=(9, 121, 105))
+distorted_ellipse(draw, (1700, 2000), (2100, 2400), (2000, 2200), (9, 121, 105), quadrants=(True, True, False, False))
+distorted_ellipse(draw, (1700, 2000), (2100, 2400), (1800, 2200), (9, 121, 105), quadrants=(False, False, True, True))
 # Right pupil
 draw.ellipse(xy=[(1850, 2100), (1950, 2300)], fill=(0, 0, 0))
 
-# Left ear
-draw.rounded_rectangle(xy=[(500, 1300), (1200, 2000)], radius=500, fill=(205, 127, 50))
-draw.rectangle(xy=[(500, 1300), (850, 1650)], fill=(205, 127, 50))
-
-# Right ear
-draw.rounded_rectangle(xy=[(1800, 1300), (2500, 2000)], radius=500, fill=(205, 127, 50))
-draw.rectangle(xy=[(2150, 1300), (2500, 1650)], fill=(205, 127, 50))
-
-
 # In Jupyter, this will display the image
+# In regular Python it will create a pop-up
 image.show()
