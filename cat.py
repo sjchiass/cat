@@ -108,17 +108,34 @@ draw.line(xy=[(1500, 2800), (1500, 2900)], fill=(0, 0, 0), width=15)
 draw.polygon(xy=[(1300, 2600), (1500, 2800), (1700, 2600)], fill=(160, 82, 45))
 
 # Left eye
-distorted_ellipse(draw, (900, 2000), (1300, 2400), (1000, 2200), (9, 121, 105), quadrants=(True, True, False, False))
-distorted_ellipse(draw, (900, 2000), (1300, 2400), (1200, 2200), (9, 121, 105), quadrants=(False, False, True, True))
-# Left pupil
-draw.ellipse(xy=[(1050, 2100), (1150, 2300)], fill=(0, 0, 0))
 
+# Eyes with mask
+# Use the mask to set the boundaries of the pupil (black part of eye)
+# With a mask, the pupil can get really big without escaping the eyes
+# The cat can also squint if it wants to
+mask = Image.new("L", (3000, 3500), "white")
+draw_mask = ImageDraw.Draw(mask)
+# Left eye mask
+distorted_ellipse(draw_mask, (900, 2000), (1300, 2400), (1000, 2200), "black", quadrants=(True, True, False, False))
+distorted_ellipse(draw_mask, (900, 2000), (1300, 2400), (1200, 2200), "black", quadrants=(False, False, True, True))
+# Right eye mask
+distorted_ellipse(draw_mask, (1700, 2000), (2100, 2400), (2000, 2200), "black", quadrants=(True, True, False, False))
+distorted_ellipse(draw_mask, (1700, 2000), (2100, 2400), (1800, 2200), "black", quadrants=(False, False, True, True))
+
+eye = Image.new("RGBA", (3000, 3500))
+draw_eye = ImageDraw.Draw(eye)
+# Left eye
+distorted_ellipse(draw_eye, (900, 2000), (1300, 2400), (1000, 2200), (9, 121, 105), quadrants=(True, True, False, False))
+distorted_ellipse(draw_eye, (900, 2000), (1300, 2400), (1200, 2200), (9, 121, 105), quadrants=(False, False, True, True))
+draw_eye.ellipse(xy=[(1050, 2050), (1150, 2350)], fill=(0, 0, 0))
 # Right eye
-# draw.ellipse(xy=[(1700, 2000), (2100, 2400)], fill=(9, 121, 105))
-distorted_ellipse(draw, (1700, 2000), (2100, 2400), (2000, 2200), (9, 121, 105), quadrants=(True, True, False, False))
-distorted_ellipse(draw, (1700, 2000), (2100, 2400), (1800, 2200), (9, 121, 105), quadrants=(False, False, True, True))
-# Right pupil
-draw.ellipse(xy=[(1850, 2100), (1950, 2300)], fill=(0, 0, 0))
+distorted_ellipse(draw_eye, (1700, 2000), (2100, 2400), (2000, 2200), (9, 121, 105), quadrants=(True, True, False, False))
+distorted_ellipse(draw_eye, (1700, 2000), (2100, 2400), (1800, 2200), (9, 121, 105), quadrants=(False, False, True, True))
+draw_eye.ellipse(xy=[(1850, 2050), (1950, 2350)], fill=(0, 0, 0))
+
+# Perform the composite
+image = Image.composite(image, eye, mask)
+draw = ImageDraw.Draw(image)
 
 # Save the image for easier git versioning
 image.save("cat.png")
