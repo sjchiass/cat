@@ -2,12 +2,6 @@
 from PIL import Image, ImageDraw
 import numpy as np
 
-# Start a new blank canvas
-image = Image.new("RGB", (2500, 2500), (255, 255, 255))
-
-# Use the draw object to draw objects
-draw = ImageDraw.Draw(image)
-
 # Define a disorted re-centered ellipse
 def distorted_ellipse(draw_obj, topleft_xy, bottomright_xy, center_xy, fill_rgb, quadrants=(True, True, True, True), stroke_width=(0, 0, 0, 0)):
     # Given a corner and a center, determine the opposiste corner
@@ -78,64 +72,280 @@ def distorted_ellipse(draw_obj, topleft_xy, bottomright_xy, center_xy, fill_rgb,
                             width=stroke_width[3])
 
 # Background
-draw.ellipse(xy=[(250, 500), (2250, 2500)],
-         fill=(205, 127, 50),
-         width=5)
+class Head:
+    def __init__(self, width=1, height=1, fill=(205, 127, 50)):
+        self.w = width
+        self.h = height
+        self.f = fill
+    def draw(self, im):
+        # All of the classes' draw methods copy the given image
+        # and return the modified copy. This means that you can
+        # keep a history of your modifications, for example for
+        # an animation of a sequence of images.
+        im = im.copy()
+        draw = ImageDraw.Draw(im)
+        ox = 1250
+        oy = 1500
+        draw.ellipse(xy=[(ox-self.w*1000, oy-self.h*1000),
+                         (ox+self.w*1000, oy+self.h*1000)],
+                     fill=self.f)
+        return im
 
 # Chin
-draw.ellipse(xy=[(1050, 2000), (1450, 2300)], fill=(227, 150, 62))
+class Mouth:
+    def __init__(self, width=1, height=1, fill=(227, 150, 62)):
+        self.w = width
+        self.h = height
+        self.f = fill
+    def draw(self, im):
+        im = im.copy()
+        draw = ImageDraw.Draw(im)
+        ox = 1250
+        oy = 2150
+        draw.ellipse(xy=[(ox-self.w*200, oy-self.h*150),
+                         (ox+self.w*200, oy+self.h*150)],
+                     fill=self.f)
+        return im
 
 # Left cheek
-distorted_ellipse(draw, (750, 1700), (1250, 2100), (950, 1900), (242, 140, 40), stroke_width=[0, 0, 15, 15])
+class LeftCheek:
+    def __init__(self, width=1, height=1, fill=(242, 140, 40)):
+        self.w = width
+        self.h = height
+        self.f = fill
+    def draw(self, im):
+        im = im.copy()
+        draw = ImageDraw.Draw(im)
+        ox = 950
+        oy = 1900
+        distorted_ellipse(draw,
+                          (ox-self.w*200, oy-self.h*200),
+                          (ox+self.w*300, oy+self.h*200),
+                          (ox, oy),
+                          self.f,
+                          stroke_width=[0, 0, 15, 15])
+        return im
 
 # Right cheek
-distorted_ellipse(draw, (1250, 1700), (1750, 2100), (1550, 1900), (242, 140, 40), stroke_width=[0, 0, 15, 15])
+class RightCheek:
+    def __init__(self, width=1, height=1, fill=(242, 140, 40)):
+        self.w = width
+        self.h = height
+        self.f = fill
+    def draw(self, im):
+        im = im.copy()
+        draw = ImageDraw.Draw(im)
+        ox = 1550
+        oy = 1900
+        distorted_ellipse(draw,
+                          (ox-self.w*300, oy-self.h*200),
+                          (ox+self.w*200, oy+self.h*200),
+                          (ox, oy),
+                          self.f,
+                          stroke_width=[0, 0, 15, 15])
+        return im
 
 # Left ear
-distorted_ellipse(draw, (250, 100), (1050, 1200), (450, 800), (205, 127, 50), quadrants=(True, True, True, True))
-# Left ear inside
-distorted_ellipse(draw, (350, 200), (750, 800), (450, 600), (184, 115, 51), quadrants=(True, True, True, True))
+class LeftEar:
+    def __init__(self, width=1, height=1, inner_fill=(184, 115, 51), outer_fill=(205, 127, 50)):
+        self.w = width
+        self.h = height
+        self.i_f = inner_fill
+        self.o_f = outer_fill
+    def draw(self, im):
+        im = im.copy()
+        draw = ImageDraw.Draw(im)
+        # Draw the outer ear first
+        o_ox = 450
+        o_oy = 800
+        distorted_ellipse(draw,
+                          (o_ox-self.w*200, o_oy-self.h*700),
+                          (o_ox+self.w*600, o_oy+self.h*400),
+                          (o_ox, o_oy),
+                          self.o_f)
+        i_ox = 450
+        i_oy = 600
+        distorted_ellipse(draw,
+                          (i_ox-self.w*100, i_oy-self.h*400),
+                          (i_ox+self.w*300, i_oy+self.h*200),
+                          (i_ox, i_oy),
+                          self.i_f)
+        return im
 
 # Right ear
-distorted_ellipse(draw, (1450, 100), (2250, 1200), (2050, 800), (205, 127, 50), quadrants=(True, True, True, True))
-# Right ear inside
-distorted_ellipse(draw, (1750, 200), (2150, 800), (2050, 600), (184, 115, 51), quadrants=(True, True, True, True))
+class RightEar:
+    def __init__(self, width=1, height=1, inner_fill=(184, 115, 51), outer_fill=(205, 127, 50)):
+        self.w = width
+        self.h = height
+        self.i_f = inner_fill
+        self.o_f = outer_fill
+    def draw(self, im):
+        im = im.copy()
+        draw = ImageDraw.Draw(im)
+        # Draw the outer ear first
+        o_ox = 2050
+        o_oy = 800
+        distorted_ellipse(draw,
+                          (o_ox-self.w*600, o_oy-self.h*700),
+                          (o_ox+self.w*200, o_oy+self.h*400),
+                          (o_ox, o_oy),
+                          self.o_f)
+        i_ox = 2050
+        i_oy = 600
+        distorted_ellipse(draw,
+                          (i_ox-self.w*300, i_oy-self.h*400),
+                          (i_ox+self.w*100, i_oy+self.h*200),
+                          (i_ox, i_oy),
+                          self.i_f)
+        return im
 
 # Nose
-# Upper lip
-draw.line(xy=[(1250, 1800), (1250, 1900)], fill=(0, 0, 0), width=15)
-# Actual nose
-draw.polygon(xy=[(1050, 1600), (1250, 1800), (1450, 1600)], fill=(160, 82, 45))
+class Nose:
+    def __init__(self, width=1, height=1, upper_lip=True, fill=(160, 82, 45)):
+        self.w = width
+        self.h = height
+        self.upper_lip = upper_lip
+        self.f = fill
+    def draw(self, im):
+        im = im.copy()
+        draw = ImageDraw.Draw(im)
+        ox = 1250
+        oy = 1700
+        if self.upper_lip:
+            draw.line(xy=[(ox, oy+self.h*100), (ox, oy+self.h*200)], fill=(0, 0, 0), width=15)
+        draw.polygon(xy=[(ox-self.w*200, oy-self.h*100),
+                                  (ox, oy+self.h*100),
+                                  (ox+self.w*200, oy-self.h*100)],
+                                  fill=self.f)
+        return im
 
 # Left eye
+class LeftEye:
+    def __init__(self, eye_width=1, eye_height=1,
+                 pupil_width=1, pupil_height=1,
+                 eye_fill=(9, 121, 105)):
+        self.ew = eye_width
+        self.eh = eye_height
+        self.pw = pupil_width
+        self.ph = pupil_height
+        self.ef = eye_fill
+    def draw(self, im):
+        eox = 850
+        eoy = 1200
+        pox = 850
+        poy = 1200
+        # Eyes with mask
+        # Use the mask to set the boundaries of the pupil (black part of eye)
+        # With a mask, the pupil can get really big without escaping the eyes
+        # The cat can also squint if it wants to
+        mask = Image.new("L", im.size, "white")
+        draw_mask = ImageDraw.Draw(mask)
+        # Left eye mask
+        distorted_ellipse(draw_mask,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox-self.ew*100, eoy),
+                          "black",
+                          quadrants=(True, True, False, False))
+        distorted_ellipse(draw_mask,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox+self.ew*100, eoy),
+                          "black",
+                          quadrants=(False, False, True, True))
+        eye = Image.new("RGBA", im.size)
+        draw_eye = ImageDraw.Draw(eye)
+        distorted_ellipse(draw_eye,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox-self.ew*100, eoy),
+                          self.ef,
+                          quadrants=(True, True, False, False))
+        distorted_ellipse(draw_eye,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox+self.ew*100, eoy),
+                          self.ef,
+                          quadrants=(False, False, True, True))
+        # Pupil
+        draw_eye.ellipse(xy=[(pox-self.pw*50, poy-self.ph*150),
+                             (pox+self.pw*50, poy+self.ph*150)],
+                             fill=(0, 0, 0))
+        # Perform the composite
+        composite = Image.composite(im, eye, mask)
+        return composite
 
-# Eyes with mask
-# Use the mask to set the boundaries of the pupil (black part of eye)
-# With a mask, the pupil can get really big without escaping the eyes
-# The cat can also squint if it wants to
-mask = Image.new("L", (2500, 2500), "white")
-draw_mask = ImageDraw.Draw(mask)
-# Left eye mask
-distorted_ellipse(draw_mask, (650, 1000), (1050, 1400), (750, 1200), "black", quadrants=(True, True, False, False))
-distorted_ellipse(draw_mask, (650, 1000), (1050, 1400), (950, 1200), "black", quadrants=(False, False, True, True))
-# Right eye mask
-distorted_ellipse(draw_mask, (1450, 1000), (1850, 1400), (1750, 1200), "black", quadrants=(True, True, False, False))
-distorted_ellipse(draw_mask, (1450, 1000), (1850, 1400), (1550, 1200), "black", quadrants=(False, False, True, True))
-
-eye = Image.new("RGBA", (2500, 2500))
-draw_eye = ImageDraw.Draw(eye)
-# Left eye
-distorted_ellipse(draw_eye, (650, 1000), (1050, 1400), (750, 1200), (9, 121, 105), quadrants=(True, True, False, False))
-distorted_ellipse(draw_eye, (650, 1000), (1050, 1400), (950, 1200), (9, 121, 105), quadrants=(False, False, True, True))
-draw_eye.ellipse(xy=[(800, 1050), (900, 1350)], fill=(0, 0, 0))
 # Right eye
-distorted_ellipse(draw_eye, (1450, 1000), (1850, 1400), (1750, 1200), (9, 121, 105), quadrants=(True, True, False, False))
-distorted_ellipse(draw_eye, (1450, 1000), (1850, 1400), (1550, 1200), (9, 121, 105), quadrants=(False, False, True, True))
-draw_eye.ellipse(xy=[(1600, 1050), (1700, 1350)], fill=(0, 0, 0))
+class RightEye:
+    def __init__(self, eye_width=1, eye_height=1,
+                 pupil_width=1, pupil_height=1,
+                 eye_fill=(9, 121, 105)):
+        self.ew = eye_width
+        self.eh = eye_height
+        self.pw = pupil_width
+        self.ph = pupil_height
+        self.ef = eye_fill
+    def draw(self, im):
+        eox = 1650
+        eoy = 1200
+        pox = 1650
+        poy = 1200
+        # Eyes with mask
+        # Use the mask to set the boundaries of the pupil (black part of eye)
+        # With a mask, the pupil can get really big without escaping the eyes
+        # The cat can also squint if it wants to
+        mask = Image.new("L", im.size, "white")
+        draw_mask = ImageDraw.Draw(mask)
+        # Left eye mask
+        distorted_ellipse(draw_mask,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox+self.ew*100, eoy),
+                          "black",
+                          quadrants=(True, True, False, False))
+        distorted_ellipse(draw_mask,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox-self.ew*100, eoy),
+                          "black",
+                          quadrants=(False, False, True, True))
+        eye = Image.new("RGBA", im.size)
+        draw_eye = ImageDraw.Draw(eye)
+        distorted_ellipse(draw_eye,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox+self.ew*100, eoy),
+                          self.ef,
+                          quadrants=(True, True, False, False))
+        distorted_ellipse(draw_eye,
+                          (eox-self.ew*200, eoy-self.eh*200),
+                          (eox+self.ew*200, eoy+self.eh*200),
+                          (eox-self.ew*100, eoy),
+                          self.ef,
+                          quadrants=(False, False, True, True))
+        # Pupil
+        draw_eye.ellipse(xy=[(pox-self.pw*50, poy-self.ph*150),
+                             (pox+self.pw*50, poy+self.ph*150)],
+                             fill=(0, 0, 0))
+        # Perform the composite
+        composite = Image.composite(im, eye, mask)
+        return composite
 
-# Perform the composite
-image = Image.composite(image, eye, mask)
-draw = ImageDraw.Draw(image)
+cat = [Head(),
+       Mouth(),
+       LeftCheek(),
+       RightCheek(),
+       Nose(),
+       LeftEar(),
+       RightEar(),
+       LeftEye(),
+       RightEye()]
+
+# Start a new blank canvas
+image = Image.new("RGB", (2500, 2500), (255, 255, 255))
+
+for x in cat:
+    image = x.draw(image)
 
 # Save the image for easier git versioning
 image.save("cat.png")
