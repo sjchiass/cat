@@ -114,12 +114,12 @@ class LeftCheek:
     def draw(self, im):
         im = im.copy()
         draw = ImageDraw.Draw(im)
-        ox = 950
+        ox = 1250
         oy = 1900
         distorted_ellipse(draw,
-                          (ox-self.w*200, oy-self.h*200),
-                          (ox+self.w*300, oy+self.h*200),
-                          (ox, oy),
+                          (ox-self.w*500, oy-self.h*200),
+                          (ox, oy+self.h*200),
+                          (ox-self.w*300, oy),
                           self.f,
                           stroke_width=[0, 0, 15, 15])
         return im
@@ -133,12 +133,12 @@ class RightCheek:
     def draw(self, im):
         im = im.copy()
         draw = ImageDraw.Draw(im)
-        ox = 1550
+        ox = 1250
         oy = 1900
         distorted_ellipse(draw,
-                          (ox-self.w*300, oy-self.h*200),
-                          (ox+self.w*200, oy+self.h*200),
-                          (ox, oy),
+                          (ox, oy-self.h*200),
+                          (ox+self.w*500, oy+self.h*200),
+                          (ox+self.w*300, oy),
                           self.f,
                           stroke_width=[0, 0, 15, 15])
         return im
