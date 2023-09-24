@@ -37,8 +37,8 @@ cat2= [Head(),
        Nose(),
        LeftEar(),
        RightEar(),
-       LeftEye(eye_height=0.1),
-       RightEye(eye_height=0.1)]
+       LeftEye(eye_height=0.2),
+       RightEye(eye_height=0.2)]
 
 cat3= [Head(width=1.25),
        Mouth(),

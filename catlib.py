@@ -240,31 +240,20 @@ class LeftEye:
         draw_mask = ImageDraw.Draw(mask)
         # Left eye mask
         distorted_ellipse(draw_mask,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox-self.ew*100, eoy),
+                          (eox-self.ew*250, eoy-self.eh*200),
+                          (eox+self.ew*250, eoy+self.eh*200),
+                          (eox+50, eoy),
                           "black",
                           quadrants=(True, True, False, False))
         distorted_ellipse(draw_mask,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox+self.ew*100, eoy),
+                          (eox-self.ew*250, eoy-self.eh*200),
+                          (eox+self.ew*250, eoy+self.eh*200),
+                          (eox-50, eoy),
                           "black",
                           quadrants=(False, False, True, True))
-        eye = Image.new("RGBA", im.size)
+        mask = mask.rotate(-30, fillcolor="white", center=(eox, eoy))
+        eye = Image.new("RGBA", im.size, self.ef)
         draw_eye = ImageDraw.Draw(eye)
-        distorted_ellipse(draw_eye,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox-self.ew*100, eoy),
-                          self.ef,
-                          quadrants=(True, True, False, False))
-        distorted_ellipse(draw_eye,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox+self.ew*100, eoy),
-                          self.ef,
-                          quadrants=(False, False, True, True))
         # Pupil
         draw_eye.ellipse(xy=[(pox-self.pw*50, poy-self.ph*150),
                              (pox+self.pw*50, poy+self.ph*150)],
@@ -296,31 +285,20 @@ class RightEye:
         draw_mask = ImageDraw.Draw(mask)
         # Left eye mask
         distorted_ellipse(draw_mask,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox+self.ew*100, eoy),
+                          (eox-self.ew*250, eoy-self.eh*200),
+                          (eox+self.ew*250, eoy+self.eh*200),
+                          (eox-50, eoy),
                           "black",
                           quadrants=(True, True, False, False))
         distorted_ellipse(draw_mask,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox-self.ew*100, eoy),
+                          (eox-self.ew*250, eoy-self.eh*200),
+                          (eox+self.ew*250, eoy+self.eh*200),
+                          (eox+50, eoy),
                           "black",
                           quadrants=(False, False, True, True))
-        eye = Image.new("RGBA", im.size)
+        mask = mask.rotate(30, fillcolor="white", center=(eox, eoy))
+        eye = Image.new("RGBA", im.size, self.ef)
         draw_eye = ImageDraw.Draw(eye)
-        distorted_ellipse(draw_eye,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox+self.ew*100, eoy),
-                          self.ef,
-                          quadrants=(True, True, False, False))
-        distorted_ellipse(draw_eye,
-                          (eox-self.ew*200, eoy-self.eh*200),
-                          (eox+self.ew*200, eoy+self.eh*200),
-                          (eox-self.ew*100, eoy),
-                          self.ef,
-                          quadrants=(False, False, True, True))
         # Pupil
         draw_eye.ellipse(xy=[(pox-self.pw*50, poy-self.ph*150),
                              (pox+self.pw*50, poy+self.ph*150)],
