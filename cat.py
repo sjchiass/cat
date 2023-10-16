@@ -21,27 +21,27 @@ for x in cat0:
 image.save("cat.png")
 
 cat1 = [Head(),
-       Mouth(),
+       Mouth(openness=0.5),
        LeftCheek(width=1.2),
        RightCheek(width=1.2),
        Nose(),
-       LeftEar(),
-       RightEar(),
+       LeftEar(turn=0.5),
+       RightEar(turn=0.5),
        LeftEye(eye_height=0.5),
        RightEye(eye_height=0.5)]
 
 cat2= [Head(),
-       Mouth(),
+       Mouth(openness=1.0),
        LeftCheek(width=1.35),
        RightCheek(width=1.35),
        Nose(),
-       LeftEar(),
-       RightEar(),
+       LeftEar(turn=1.0),
+       RightEar(turn=1.0),
        LeftEye(eye_height=0.2),
        RightEye(eye_height=0.2)]
 
 cat3= [Head(width=1.25),
-       Mouth(),
+       Mouth(openness=0.2),
        LeftCheek(width=0.8),
        RightCheek(width=0.8),
        Nose(),

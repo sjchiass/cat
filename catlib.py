@@ -89,19 +89,66 @@ class Head:
                      fill=self.f)
         return im
 
-# Chin
+# Mouth
 class Mouth:
-    def __init__(self, width=1, height=1, fill=(227, 150, 62)):
+    def __init__(self, 
+                 openness = 0.0, 
+                 chin_x_offset = 0.0, chin_y_offset = 0.0, 
+                 width=1, height=1,
+                 fill=(227, 150, 62)):
+        self.uox = 1250
+        self.uoy = 1950
+        self.cox = 1250 * (1 + chin_x_offset)
+        self.coy = 2150 * (1 + chin_y_offset + openness*0.1)
         self.w = width
         self.h = height
         self.f = fill
     def draw(self, im):
         im = im.copy()
         draw = ImageDraw.Draw(im)
-        ox = 1250
-        oy = 2150
-        draw.ellipse(xy=[(ox-self.w*200, oy-self.h*150),
-                         (ox+self.w*200, oy+self.h*150)],
+        # Each part of the mouth is overlaid on the previous
+        # lip over teeth, teeth over mouth hole
+        # open mouth, basically a hole
+        draw.rectangle(xy=[(self.uox-self.w*175, self.uoy-self.h*50),
+                         (self.cox+self.w*175, self.coy)],
+                     fill=(0, 0, 0))
+        # upper teef
+        upper_teefs = [
+            (-150, 75, -100),
+            (-100, 20,  -50),
+            ( -50, 20,    0),
+            (   0, 20,   50),
+            (  50, 20,  100),
+            ( 100, 75,  150),
+            ]
+        for t in upper_teefs:
+            draw.ellipse(xy=[(self.uox+self.w*t[0], self.uoy-self.h*(50+t[1])),
+                               (self.uox+self.w*t[2], self.uoy+self.h*(50+t[1]))],
+                        fill=(255, 255, 255))
+        # lower teef
+        lower_teefs = [
+            (-150, 75, -100),
+            (-100, 20,  -50),
+            ( -50, 20,    0),
+            (   0, 20,   50),
+            (  50, 20,  100),
+            ( 100, 75,  150),
+            ]
+        for t in lower_teefs:
+            draw.ellipse(xy=[(self.cox+self.w*t[0], self.coy-self.h*(175+t[1])),
+                               (self.cox+self.w*t[2], self.coy)],
+                        fill=(255, 255, 255))
+        # upper lip
+        draw.rectangle(xy=[(self.uox-self.w*175, self.uoy-self.h*50),
+                         (self.uox+self.w*175, self.uoy+self.h*50)],
+                     fill=(74, 44, 42))
+        # lower lip
+        draw.rectangle(xy=[(self.cox-self.w*175, self.coy-self.h*175),
+                         (self.cox+self.w*175, self.coy)],
+                     fill=(74, 44, 42))
+        # chin
+        draw.ellipse(xy=[(self.cox-self.w*200, self.coy-self.h*150),
+                         (self.cox+self.w*200, self.coy+self.h*150)],
                      fill=self.f)
         return im
 
