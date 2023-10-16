@@ -145,57 +145,78 @@ class RightCheek:
 
 # Left ear
 class LeftEar:
-    def __init__(self, width=1, height=1, inner_fill=(184, 115, 51), outer_fill=(205, 127, 50)):
+    def __init__(self, width=1, height=1,
+                 turn=0.0,
+                 inner_fill=(184, 115, 51),
+                 outer_fill=(205, 127, 50)):
         self.w = width
         self.h = height
+        self.t = turn
         self.i_f = inner_fill
         self.o_f = outer_fill
     def draw(self, im):
-        im = im.copy()
-        draw = ImageDraw.Draw(im)
+        mask = Image.new("L", im.size, "white")
+        draw_mask = ImageDraw.Draw(mask)
         # Draw the outer ear first
         o_ox = 450
         o_oy = 800
-        distorted_ellipse(draw,
-                          (o_ox-self.w*200, o_oy-self.h*700),
+        distorted_ellipse(draw_mask,
+                          (o_ox-self.w*200-self.t*100, o_oy-self.h*700+self.t*200),
                           (o_ox+self.w*600, o_oy+self.h*400),
-                          (o_ox, o_oy),
-                          self.o_f)
+                          (o_ox-self.t*100, o_oy+self.t*200),
+                          "black")
+        mask = mask.rotate(self.t*45, fillcolor="white", center=(o_ox, o_oy))
+        ear = Image.new("RGBA", im.size, self.o_f)
+        draw_ear = ImageDraw.Draw(ear)
         i_ox = 450
         i_oy = 600
-        distorted_ellipse(draw,
-                          (i_ox-self.w*100, i_oy-self.h*400),
-                          (i_ox+self.w*300, i_oy+self.h*200),
-                          (i_ox, i_oy),
+        distorted_ellipse(draw_ear,
+                          (i_ox-(self.t+self.w)*100, i_oy-self.h*400+self.t*200),
+                          (i_ox+(1-self.t)*self.w*300, i_oy+self.h*200+self.t*100),
+                          (i_ox-self.t*150, i_oy),
                           self.i_f)
-        return im
+        ear = ear.rotate(self.t*45, fillcolor="white", center=(o_ox, o_oy))
+        # Perform the composite
+        composite = Image.composite(im, ear, mask)
+        return composite
 
 # Right ear
 class RightEar:
-    def __init__(self, width=1, height=1, inner_fill=(184, 115, 51), outer_fill=(205, 127, 50)):
+    def __init__(self, width=1, height=1,
+                 turn=0.0,
+                 inner_fill=(184, 115, 51),
+                 outer_fill=(205, 127, 50)):
         self.w = width
         self.h = height
+        self.t = turn
         self.i_f = inner_fill
         self.o_f = outer_fill
     def draw(self, im):
-        im = im.copy()
-        draw = ImageDraw.Draw(im)
+    
+        mask = Image.new("L", im.size, "white")
+        draw_mask = ImageDraw.Draw(mask)
         # Draw the outer ear first
         o_ox = 2050
         o_oy = 800
-        distorted_ellipse(draw,
-                          (o_ox-self.w*600, o_oy-self.h*700),
-                          (o_ox+self.w*200, o_oy+self.h*400),
-                          (o_ox, o_oy),
-                          self.o_f)
+        distorted_ellipse(draw_mask,
+                          (o_ox-self.w*600, o_oy-self.h*700+self.t*200),
+                          (o_ox+self.w*200+self.t*100, o_oy+self.h*400),
+                          (o_ox+self.t*100, o_oy+self.t*200),
+                          "black")
+        mask = mask.rotate(self.t*-45, fillcolor="white", center=(o_ox, o_oy))
+        ear = Image.new("RGBA", im.size, self.o_f)
+        draw_ear = ImageDraw.Draw(ear)
         i_ox = 2050
         i_oy = 600
-        distorted_ellipse(draw,
-                          (i_ox-self.w*300, i_oy-self.h*400),
-                          (i_ox+self.w*100, i_oy+self.h*200),
-                          (i_ox, i_oy),
+        distorted_ellipse(draw_ear,
+                          (i_ox-(1-self.t)*self.w*300, i_oy-self.h*400+self.t*200),
+                          (i_ox+(self.t+self.w)*100, i_oy+self.h*200+self.t*100),
+                          (i_ox+self.t*150, i_oy),
                           self.i_f)
-        return im
+        ear = ear.rotate(self.t*-45, fillcolor="white", center=(o_ox, o_oy))
+        # Perform the composite
+        composite = Image.composite(im, ear, mask)
+        return composite
 
 # Nose
 class Nose:
