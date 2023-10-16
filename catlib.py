@@ -287,13 +287,16 @@ class Nose:
 
 # Left eye
 class LeftEye:
-    def __init__(self, eye_width=1, eye_height=1,
+    def __init__(self, 
+                 squint = 0.25,
+                 dilation = 0.1,
+                 eye_width=1, eye_height=1,
                  pupil_width=1, pupil_height=1,
                  eye_fill=(9, 121, 105)):
         self.ew = eye_width
-        self.eh = eye_height
-        self.pw = pupil_width
-        self.ph = pupil_height
+        self.eh = eye_height * (1.25-squint)
+        self.pw = pupil_width * (0.7+3*dilation)
+        self.ph = pupil_height * (0.9+0.5*dilation)
         self.ef = eye_fill
     def draw(self, im):
         eox = 850
@@ -332,13 +335,16 @@ class LeftEye:
 
 # Right eye
 class RightEye:
-    def __init__(self, eye_width=1, eye_height=1,
+    def __init__(self,
+                 squint = 0.25,
+                 dilation = 0.1,
+                 eye_width=1, eye_height=1,
                  pupil_width=1, pupil_height=1,
                  eye_fill=(9, 121, 105)):
         self.ew = eye_width
-        self.eh = eye_height
-        self.pw = pupil_width
-        self.ph = pupil_height
+        self.eh = eye_height * (1.25-squint)
+        self.pw = pupil_width * (0.7+3*dilation)
+        self.ph = pupil_height * (0.9+0.5*dilation)
         self.ef = eye_fill
     def draw(self, im):
         eox = 1650

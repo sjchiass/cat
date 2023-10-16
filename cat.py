@@ -27,8 +27,8 @@ cat1 = [Head(),
        Nose(),
        LeftEar(turn=0.5),
        RightEar(turn=0.5),
-       LeftEye(eye_height=0.5),
-       RightEye(eye_height=0.5)]
+       LeftEye(squint=0.75, dilation=0.25),
+       RightEye(squint=0.75, dilation=0.25)]
 
 cat2= [Head(),
        Mouth(openness=1.0),
@@ -37,8 +37,8 @@ cat2= [Head(),
        Nose(),
        LeftEar(turn=1.0),
        RightEar(turn=1.0),
-       LeftEye(eye_height=0.2),
-       RightEye(eye_height=0.2)]
+       LeftEye(squint=1.0, dilation=0.5),
+       RightEye(squint=1.0, dilation=0.5)]
 
 cat3= [Head(width=1.25),
        Mouth(openness=0.2),
@@ -47,8 +47,8 @@ cat3= [Head(width=1.25),
        Nose(),
        LeftEar(),
        RightEar(),
-       LeftEye(pupil_width=4, pupil_height=1.25),
-       RightEye(pupil_width=4, pupil_height=1.25)]
+       LeftEye(squint=0.25, dilation=1.0),
+       RightEye(squint=0.25, dilation=1.0)]
 
 images = [
     Image.new("RGB", (2500, 2500), (255, 255, 255)),
