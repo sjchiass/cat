@@ -2,6 +2,11 @@ from PIL import Image, ImageDraw
 
 # Background
 class Head:
+    # The canvas size the layers were designed in.
+    # The actual output images are rescaled from this design size
+    # to the actual size of the image being drawn.
+    __ref_width = 2500.0
+    __ref_height = 2500.0
     def __init__(self, width=1, height=1, fill=(205, 127, 50)):
         self.w = width
         self.h = height
@@ -12,16 +17,40 @@ class Head:
         # keep a history of your modifications, for example for
         # an animation of a sequence of images.
         im = im.copy()
-        draw = ImageDraw.Draw(im)
         ox = 1250
         oy = 1500
-        draw.ellipse(xy=[(ox-self.w*1000, oy-self.h*1000),
+        self.draw_ellipse(im, xy=[(ox-self.w*1000, oy-self.h*1000),
                          (ox+self.w*1000, oy+self.h*1000)],
                      fill=self.f)
         return im
-    @staticmethod
+    def rescale_1d(self, a, im_size_tuple):
+        return round(a*(im_size_tuple[0]+im_size_tuple[1])/(self.__ref_width+self.__ref_height))
+    def rescale(self, x_y_tuple, im_size_tuple):
+        return round(x_y_tuple[0]*im_size_tuple[0]/self.__ref_width), round(x_y_tuple[1]*im_size_tuple[1]/self.__ref_height)
+    def draw_rectangle(self, im, xy, **kwargs):
+        xy = [self.rescale(ab, im.size) for ab in xy]
+        draw_obj = ImageDraw.Draw(im)
+        draw_obj.rectangle(xy, **kwargs)
+    def draw_ellipse(self, im, xy, **kwargs):
+        xy = [self.rescale(ab, im.size) for ab in xy]
+        draw_obj = ImageDraw.Draw(im)
+        draw_obj.ellipse(xy, **kwargs)
+    def draw_polygon(self, im, xy, **kwargs):
+        xy = [self.rescale(ab, im.size) for ab in xy]
+        draw_obj = ImageDraw.Draw(im)
+        draw_obj.polygon(xy, **kwargs)
+    def draw_line(self, im, xy, width, **kwargs):
+        xy = [self.rescale(ab, im.size) for ab in xy]
+        width = self.rescale_1d(width, im.size)
+        draw_obj = ImageDraw.Draw(im)
+        draw_obj.polygon(xy, **kwargs)
     # Define a disorted re-centered ellipse
-    def distorted_ellipse(draw_obj, topleft_xy, bottomright_xy, center_xy, fill_rgb, quadrants=(True, True, True, True), stroke_width=(0, 0, 0, 0)):
+    def distorted_ellipse(self, im, topleft_xy, bottomright_xy, center_xy, fill_rgb, quadrants=(True, True, True, True), stroke_width=(0, 0, 0, 0)):
+        topleft_xy = self.rescale(topleft_xy, im.size)
+        bottomright_xy = self.rescale(bottomright_xy, im.size)
+        center_xy = self.rescale(center_xy, im.size)
+        draw_obj = ImageDraw.Draw(im)
+        stroke_width = [self.rescale_1d(a, im.size) for a in stroke_width]
         # Given a corner and a center, determine the opposiste corner
         # If you draw this on paper, the other corner is on the opposite side of the center
         # that the original corner is
@@ -105,11 +134,10 @@ class Mouth(Head):
         self.f = fill
     def draw(self, im):
         im = im.copy()
-        draw = ImageDraw.Draw(im)
         # Each part of the mouth is overlaid on the previous
         # lip over teeth, teeth over mouth hole
         # open mouth, basically a hole
-        draw.rectangle(xy=[(self.uox-self.w*175, self.uoy-self.h*50),
+        self.draw_rectangle(im, xy=[(self.uox-self.w*175, self.uoy-self.h*50),
                          (self.cox+self.w*175, self.coy)],
                      fill=(0, 0, 0))
         # upper teef
@@ -122,7 +150,7 @@ class Mouth(Head):
             ( 100, 75,  150),
             ]
         for t in upper_teefs:
-            draw.ellipse(xy=[(self.uox+self.w*t[0], self.uoy-self.h*(50+t[1])),
+            self.draw_ellipse(im, xy=[(self.uox+self.w*t[0], self.uoy-self.h*(50+t[1])),
                                (self.uox+self.w*t[2], self.uoy+self.h*(50+t[1]))],
                         fill=(255, 255, 255))
         # lower teef
@@ -135,19 +163,19 @@ class Mouth(Head):
             ( 100, 75,  150),
             ]
         for t in lower_teefs:
-            draw.ellipse(xy=[(self.cox+self.w*t[0], self.coy-self.h*(175+t[1])),
+            self.draw_ellipse(im, xy=[(self.cox+self.w*t[0], self.coy-self.h*(175+t[1])),
                                (self.cox+self.w*t[2], self.coy)],
                         fill=(255, 255, 255))
         # upper lip
-        draw.rectangle(xy=[(self.uox-self.w*175, self.uoy-self.h*50),
+        self.draw_rectangle(im, xy=[(self.uox-self.w*175, self.uoy-self.h*50),
                          (self.uox+self.w*175, self.uoy+self.h*50)],
                      fill=(74, 44, 42))
         # lower lip
-        draw.rectangle(xy=[(self.cox-self.w*175, self.coy-self.h*175),
+        self.draw_rectangle(im, xy=[(self.cox-self.w*175, self.coy-self.h*175),
                          (self.cox+self.w*175, self.coy)],
                      fill=(74, 44, 42))
         # chin
-        draw.ellipse(xy=[(self.cox-self.w*200, self.coy-self.h*150),
+        self.draw_ellipse(im, xy=[(self.cox-self.w*200, self.coy-self.h*150),
                          (self.cox+self.w*200, self.coy+self.h*150)],
                      fill=self.f)
         return im
@@ -160,10 +188,9 @@ class LeftCheek(Head):
         self.f = fill
     def draw(self, im):
         im = im.copy()
-        draw = ImageDraw.Draw(im)
         ox = 1250
         oy = 1900
-        self.distorted_ellipse(draw,
+        self.distorted_ellipse(im,
                           (ox-self.w*500, oy-self.h*200),
                           (ox, oy+self.h*200),
                           (ox-self.w*300, oy),
@@ -179,10 +206,9 @@ class RightCheek(Head):
         self.f = fill
     def draw(self, im):
         im = im.copy()
-        draw = ImageDraw.Draw(im)
         ox = 1250
         oy = 1900
-        self.distorted_ellipse(draw,
+        self.distorted_ellipse(im,
                           (ox, oy-self.h*200),
                           (ox+self.w*500, oy+self.h*200),
                           (ox+self.w*300, oy),
@@ -203,26 +229,28 @@ class LeftEar(Head):
         self.o_f = outer_fill
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
-        draw_mask = ImageDraw.Draw(mask)
         # Draw the outer ear first
         o_ox = 450
         o_oy = 800
-        self.distorted_ellipse(draw_mask,
+        self.distorted_ellipse(mask,
                           (o_ox-self.w*200-self.t*100, o_oy-self.h*700+self.t*200),
                           (o_ox+self.w*600, o_oy+self.h*400),
                           (o_ox-self.t*100, o_oy+self.t*200),
                           "black")
-        mask = mask.rotate(self.t*45, fillcolor="white", center=(o_ox, o_oy))
+        # Rescale rotation origin as well
+        mask = mask.rotate(self.t*45, fillcolor="white",
+                           center=self.rescale((o_ox, o_oy), mask.size))
         ear = Image.new("RGBA", im.size, self.o_f)
-        draw_ear = ImageDraw.Draw(ear)
         i_ox = 450
         i_oy = 600
-        self.distorted_ellipse(draw_ear,
+        self.distorted_ellipse(ear,
                           (i_ox-(self.t+self.w)*100, i_oy-self.h*400+self.t*200),
                           (i_ox+(1-self.t)*self.w*300, i_oy+self.h*200+self.t*100),
                           (i_ox-self.t*150, i_oy),
                           self.i_f)
-        ear = ear.rotate(self.t*45, fillcolor="white", center=(o_ox, o_oy))
+        # Rescale rotation origin as well
+        ear = ear.rotate(self.t*45, fillcolor="white",
+                         center=self.rescale((o_ox, o_oy), mask.size))
         # Perform the composite
         composite = Image.composite(im, ear, mask)
         return composite
@@ -239,28 +267,29 @@ class RightEar(Head):
         self.i_f = inner_fill
         self.o_f = outer_fill
     def draw(self, im):
-    
         mask = Image.new("L", im.size, "white")
-        draw_mask = ImageDraw.Draw(mask)
         # Draw the outer ear first
         o_ox = 2050
         o_oy = 800
-        self.distorted_ellipse(draw_mask,
+        self.distorted_ellipse(mask,
                           (o_ox-self.w*600, o_oy-self.h*700+self.t*200),
                           (o_ox+self.w*200+self.t*100, o_oy+self.h*400),
                           (o_ox+self.t*100, o_oy+self.t*200),
                           "black")
-        mask = mask.rotate(self.t*-45, fillcolor="white", center=(o_ox, o_oy))
+        # Rescale rotation origin as well
+        mask = mask.rotate(self.t*-45, fillcolor="white",
+                           center=self.rescale((o_ox, o_oy), mask.size))
         ear = Image.new("RGBA", im.size, self.o_f)
-        draw_ear = ImageDraw.Draw(ear)
         i_ox = 2050
         i_oy = 600
-        self.distorted_ellipse(draw_ear,
+        self.distorted_ellipse(ear,
                           (i_ox-(1-self.t)*self.w*300, i_oy-self.h*400+self.t*200),
                           (i_ox+(self.t+self.w)*100, i_oy+self.h*200+self.t*100),
                           (i_ox+self.t*150, i_oy),
                           self.i_f)
-        ear = ear.rotate(self.t*-45, fillcolor="white", center=(o_ox, o_oy))
+        # Rescale rotation origin as well
+        ear = ear.rotate(self.t*-45, fillcolor="white",
+                         center=self.rescale((o_ox, o_oy), mask.size))
         # Perform the composite
         composite = Image.composite(im, ear, mask)
         return composite
@@ -274,12 +303,11 @@ class Nose(Head):
         self.f = fill
     def draw(self, im):
         im = im.copy()
-        draw = ImageDraw.Draw(im)
         ox = 1250
         oy = 1700
         if self.upper_lip:
-            draw.line(xy=[(ox, oy+self.h*100), (ox, oy+self.h*200)], fill=(0, 0, 0), width=15)
-        draw.polygon(xy=[(ox-self.w*200, oy-self.h*100),
+            self.draw_line(im, xy=[(ox, oy+self.h*100), (ox, oy+self.h*200)], fill=(0, 0, 0), width=15)
+        self.draw_polygon(im, xy=[(ox-self.w*200, oy-self.h*100),
                                   (ox, oy+self.h*100),
                                   (ox+self.w*200, oy-self.h*100)],
                                   fill=self.f)
@@ -308,25 +336,25 @@ class LeftEye(Head):
         # With a mask, the pupil can get really big without escaping the eyes
         # The cat can also squint if it wants to
         mask = Image.new("L", im.size, "white")
-        draw_mask = ImageDraw.Draw(mask)
         # Left eye mask
-        self.distorted_ellipse(draw_mask,
+        self.distorted_ellipse(mask,
                           (eox-self.ew*250, eoy-self.eh*200),
                           (eox+self.ew*250, eoy+self.eh*200),
                           (eox+50, eoy),
                           "black",
                           quadrants=(True, True, False, False))
-        self.distorted_ellipse(draw_mask,
+        self.distorted_ellipse(mask,
                           (eox-self.ew*250, eoy-self.eh*200),
                           (eox+self.ew*250, eoy+self.eh*200),
                           (eox-50, eoy),
                           "black",
                           quadrants=(False, False, True, True))
-        mask = mask.rotate(-30, fillcolor="white", center=(eox, eoy))
         eye = Image.new("RGBA", im.size, self.ef)
-        draw_eye = ImageDraw.Draw(eye)
+        # Rescale rotation origin as well
+        mask = mask.rotate(-30, fillcolor="white",
+                         center=self.rescale((eox, eoy), mask.size))
         # Pupil
-        draw_eye.ellipse(xy=[(pox-self.pw*50, poy-self.ph*150),
+        self.draw_ellipse(eye, xy=[(pox-self.pw*50, poy-self.ph*150),
                              (pox+self.pw*50, poy+self.ph*150)],
                              fill=(0, 0, 0))
         # Perform the composite
@@ -356,25 +384,25 @@ class RightEye(Head):
         # With a mask, the pupil can get really big without escaping the eyes
         # The cat can also squint if it wants to
         mask = Image.new("L", im.size, "white")
-        draw_mask = ImageDraw.Draw(mask)
         # Left eye mask
-        self.distorted_ellipse(draw_mask,
+        self.distorted_ellipse(mask,
                           (eox-self.ew*250, eoy-self.eh*200),
                           (eox+self.ew*250, eoy+self.eh*200),
                           (eox-50, eoy),
                           "black",
                           quadrants=(True, True, False, False))
-        self.distorted_ellipse(draw_mask,
+        self.distorted_ellipse(mask,
                           (eox-self.ew*250, eoy-self.eh*200),
                           (eox+self.ew*250, eoy+self.eh*200),
                           (eox+50, eoy),
                           "black",
                           quadrants=(False, False, True, True))
-        mask = mask.rotate(30, fillcolor="white", center=(eox, eoy))
         eye = Image.new("RGBA", im.size, self.ef)
-        draw_eye = ImageDraw.Draw(eye)
+        # Rescale rotation origin as well
+        mask = mask.rotate(30, fillcolor="white",
+                         center=self.rescale((eox, eoy), mask.size))
         # Pupil
-        draw_eye.ellipse(xy=[(pox-self.pw*50, poy-self.ph*150),
+        self.draw_ellipse(eye, xy=[(pox-self.pw*50, poy-self.ph*150),
                              (pox+self.pw*50, poy+self.ph*150)],
                              fill=(0, 0, 0))
         # Perform the composite
