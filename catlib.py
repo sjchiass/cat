@@ -35,6 +35,10 @@ class Head:
         xy = [self.rescale(ab, im.size) for ab in xy]
         draw_obj = ImageDraw.Draw(im)
         draw_obj.ellipse(xy, **kwargs)
+    def draw_pieslice(self, im, xy, **kwargs):
+        xy = [self.rescale(ab, im.size) for ab in xy]
+        draw_obj = ImageDraw.Draw(im)
+        draw_obj.pieslice(xy, **kwargs)
     def draw_polygon(self, im, xy, **kwargs):
         xy = [self.rescale(ab, im.size) for ab in xy]
         draw_obj = ImageDraw.Draw(im)
@@ -337,12 +341,11 @@ class LeftEye(Head):
         # The cat can also squint if it wants to
         mask = Image.new("L", im.size, "white")
         # Left eye mask
-        self.distorted_ellipse(mask,
-                          (eox-self.ew*250, eoy-self.eh*200),
-                          (eox+self.ew*250, eoy+self.eh*200),
-                          (eox+50, eoy),
-                          "black",
-                          quadrants=(True, True, False, False))
+        self.draw_pieslice(mask,
+                          [(eox-self.ew*250, eoy-self.eh*200),
+                          (eox+self.ew*250, eoy+self.eh*200)],
+                          start=180, end=0,
+                          fill="black")
         self.distorted_ellipse(mask,
                           (eox-self.ew*250, eoy-self.eh*200),
                           (eox+self.ew*250, eoy+self.eh*200),
