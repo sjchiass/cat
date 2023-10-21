@@ -1,3 +1,4 @@
+import math
 from PIL import Image, ImageDraw
 
 # Background
@@ -35,6 +36,11 @@ class Head:
         xy = [self.rescale(ab, im.size) for ab in xy]
         draw_obj = ImageDraw.Draw(im)
         draw_obj.ellipse(xy, **kwargs)
+    def draw_arc(self, im, xy, width, **kwargs):
+        xy = [self.rescale(ab, im.size) for ab in xy]
+        width = self.rescale_1d(width, im.size)
+        draw_obj = ImageDraw.Draw(im)
+        draw_obj.arc(xy=xy, width=width, **kwargs)
     def draw_pieslice(self, im, xy, **kwargs):
         xy = [self.rescale(ab, im.size) for ab in xy]
         draw_obj = ImageDraw.Draw(im)
@@ -411,3 +417,99 @@ class RightEye(Head):
         # Perform the composite
         composite = Image.composite(im, eye, mask)
         return composite
+
+# Left whisker
+# Whiskers are portions of a circle's circumference
+# Are the whiskers move/droop, the circle moves along another
+# hidden circle, while the arc similarly slides (start and end angles)
+# What this all does is create a curve that spins on an origin
+class LeftWhisker(Head):
+    def __init__(self, width=1, height=1,
+                 droopiness=0.5, length=0.75,
+                 fill="white", thickness=2,
+                 whiskers = 5):
+        self.w = width
+        self.h = height
+        self.f = fill
+        self.d = droopiness
+        self.l = length
+        self.t = thickness
+        self.ox = 1000
+        self.oy = 1850
+        self.flip = False
+        self.n = whiskers
+    def draw(self, im):
+        im = im.copy()
+        for w in range(self.n):
+            oy = self.oy + w//2*50
+            d = self.d+w/5
+            if self.flip:
+                ox = self.ox + w%2*100
+                phase = d*math.pi/2
+                s=180+d*90
+                e=300+d*90*self.l
+            else:
+                ox = self.ox - w%2*100
+                phase = (2-d)*math.pi/2
+                s=240-d*90*self.l
+                e=0-d*90
+            self.draw_arc(im,
+                        xy = [
+                            (ox+400*self.w*(math.cos(phase)-1),
+                            oy+400*self.h*(math.sin(phase)-1)),
+                            (ox+400*self.w*(math.cos(phase)+1),
+                            oy+400*self.h*(math.sin(phase)+1))  
+                        ],
+                        start=s,
+                        end=e,
+                        fill=self.f,
+                        width=self.t)
+        return im
+
+class RightWhisker(LeftWhisker):
+    def __init__(self, width=1, height=1,
+                 droopiness=0.5, length=0.75,
+                 fill="white", thickness=2,
+                 whiskers=5):
+        self.w = width
+        self.h = height
+        self.f = fill
+        self.d = droopiness
+        self.l = length
+        self.t = thickness
+        self.ox = 1500
+        self.oy = 1850
+        self.flip = True
+        self.n = whiskers
+
+class LeftEyebrow(LeftWhisker):
+    def __init__(self, width=1, height=1,
+                 droopiness=0.0, length=0.75,
+                 fill="white", thickness=1,
+                 whiskers=2):
+        self.w = width
+        self.h = height
+        self.f = fill
+        self.d = droopiness
+        self.l = length
+        self.t = thickness
+        self.ox = 1050
+        self.oy = 900
+        self.flip = False
+        self.n = whiskers
+
+class RightEyebrow(LeftWhisker):
+    def __init__(self, width=1, height=1,
+                 droopiness=0.0, length=0.75,
+                 fill="white", thickness=1,
+                 whiskers=2):
+        self.w = width
+        self.h = height
+        self.f = fill
+        self.d = droopiness
+        self.l = length
+        self.t = thickness
+        self.ox = 1450
+        self.oy = 900
+        self.flip = True
+        self.n = whiskers

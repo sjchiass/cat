@@ -8,7 +8,12 @@ cat0 = [Head(),
        LeftEar(),
        RightEar(),
        LeftEye(),
-       RightEye()]
+       RightEye(),
+       LeftWhisker(),
+       RightWhisker(),
+       LeftEyebrow(),
+       RightEyebrow()
+       ]
 
 
 # Start a new blank canvas
@@ -28,7 +33,11 @@ cat1 = [Head(),
        LeftEar(turn=0.5),
        RightEar(turn=0.5),
        LeftEye(squint=0.75, dilation=0.25),
-       RightEye(squint=0.75, dilation=0.25)]
+       RightEye(squint=0.75, dilation=0.25),
+       LeftWhisker(),
+       RightWhisker(),
+       LeftEyebrow(),
+       RightEyebrow()]
 
 cat2= [Head(),
        Mouth(openness=1.0),
@@ -38,7 +47,11 @@ cat2= [Head(),
        LeftEar(turn=1.0),
        RightEar(turn=1.0),
        LeftEye(squint=1.0, dilation=0.5),
-       RightEye(squint=1.0, dilation=0.5)]
+       RightEye(squint=1.0, dilation=0.5),
+       LeftWhisker(),
+       RightWhisker(),
+       LeftEyebrow(),
+       RightEyebrow()]
 
 cat3= [Head(width=1.25),
        Mouth(openness=0.2),
@@ -48,7 +61,11 @@ cat3= [Head(width=1.25),
        LeftEar(),
        RightEar(),
        LeftEye(squint=0.25, dilation=1.0),
-       RightEye(squint=0.25, dilation=1.0)]
+       RightEye(squint=0.25, dilation=1.0),
+       LeftWhisker(),
+       RightWhisker(),
+       LeftEyebrow(),
+       RightEyebrow()]
 
 images = [
     Image.new("RGB", (2500, 2500), (255, 255, 255)),
