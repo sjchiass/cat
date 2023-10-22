@@ -1,29 +1,54 @@
 import math
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageEnhance
 
 # Background
 class Head:
     # The canvas size the layers were designed in.
     # The actual output images are rescaled from this design size
     # to the actual size of the image being drawn.
-    __ref_width = 2500.0
-    __ref_height = 2500.0
-    def __init__(self, width=1, height=1, fill=(205, 127, 50)):
+    __ref_width = 2500
+    __ref_height = 2500
+    pattern_dict = {
+        "orange" : {"fill" : (205, 127, 50),
+                    "nose" : (160, 82, 45),
+                    "white_neck" : False},
+        "orange tabby" : {"fill" : (205, 127, 50),
+                    "nose" : (255, 167, 166),
+                    "white_neck" : True},
+        "tuxedo" : {"fill" : (32, 32, 36),
+                          "nose" : "black",
+                    "white_neck" : True},
+        "black" : {"fill" : (32, 32, 36),
+                          "nose" : "black",
+                    "white_neck" : False},
+        "grey tabby" : {"fill" : "grey",
+                    "nose" : (160, 82, 45),
+                    "white_neck" : True},
+        "russian blue" : {"fill" : (102, 109, 113),
+                          "nose" : (25, 30, 32),
+                    "white_neck" : False},
+    }
+    def __init__(self, width=1, height=1):
         self.w = width
         self.h = height
-        self.f = fill
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 1.0
     def draw(self, im):
         # All of the classes' draw methods copy the given image
         # and return the modified copy. This means that you can
         # keep a history of your modifications, for example for
         # an animation of a sequence of images.
         im = im.copy()
+        mask = Image.new("L", im.size, "white")
         ox = 1250
         oy = 1500
-        self.draw_ellipse(im, xy=[(ox-self.w*1000, oy-self.h*1000),
+        self.draw_ellipse(mask, xy=[(ox-self.w*1000, oy-self.h*1000),
                          (ox+self.w*1000, oy+self.h*1000)],
-                     fill=self.f)
-        return im
+                     fill="black")
+        composite = Image.composite(im, self.get_pattern(im), mask)
+        return composite
     def rescale_1d(self, a, im_size_tuple):
         return round(a*(im_size_tuple[0]+im_size_tuple[1])/(self.__ref_width+self.__ref_height))
     def rescale(self, x_y_tuple, im_size_tuple):
@@ -127,21 +152,47 @@ class Head:
                                 end=180,
                                 fill="black",
                                 width=stroke_width[3])
+    def set_pattern(self, pattern_name=None, fill=None, nose=None, white_neck=None, brightness=None):
+        if pattern_name is not None:
+            for key in self.pattern_dict[pattern_name]:
+                setattr(self, key, self.pattern_dict[pattern_name][key])
+        if fill is not None:
+            self.fill = fill
+        if nose is not None:
+            self.nose = nose
+        if white_neck is not None:
+            self.white_neck = white_neck
+        if brightness is not None:
+            self.brightness = brightness
+        return self
+    def get_pattern(self, im):
+        pattern = Image.new("RGB", im.size, (255, 255, 255))
+        draw_obj = ImageDraw.Draw(pattern)
+        if self.fill is not None:
+            draw_obj.rectangle([(0, 0), (pattern.width, pattern.height)], fill=self.fill)
+        if self.white_neck:
+            draw_obj.polygon([(pattern.width/2, pattern.height/2), (pattern.width, pattern.height), (0, pattern.height)], fill="white")
+        if self.brightness != 1.0:
+            enhance_obj = ImageEnhance.Brightness(pattern)
+            pattern = enhance_obj.enhance(self.brightness)
+        return pattern
 
 # Mouth
 class Mouth(Head):
     def __init__(self, 
                  openness = 0.0, 
                  chin_x_offset = 0.0, chin_y_offset = 0.0, 
-                 width=1, height=1,
-                 fill=(227, 150, 62)):
+                 width=1, height=1):
         self.uox = 1250
         self.uoy = 1950
         self.cox = 1250 * (1 + chin_x_offset)
         self.coy = 2150 * (1 + chin_y_offset + openness*0.1)
         self.w = width
         self.h = height
-        self.f = fill
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 0.9
     def draw(self, im):
         im = im.copy()
         # Each part of the mouth is overlaid on the previous
@@ -185,58 +236,70 @@ class Mouth(Head):
                          (self.cox+self.w*175, self.coy)],
                      fill=(74, 44, 42))
         # chin
-        self.draw_ellipse(im, xy=[(self.cox-self.w*200, self.coy-self.h*150),
+        mask = Image.new("L", im.size, "white")
+        self.draw_ellipse(mask, xy=[(self.cox-self.w*200, self.coy-self.h*150),
                          (self.cox+self.w*200, self.coy+self.h*150)],
-                     fill=self.f)
-        return im
+                     fill="black")
+        composite = Image.composite(im, self.get_pattern(im), mask)
+        return composite
 
 # Left cheek
 class LeftCheek(Head):
-    def __init__(self, width=1, height=1, fill=(242, 140, 40)):
+    def __init__(self, width=1, height=1):
         self.w = width
         self.h = height
-        self.f = fill
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 0.95
     def draw(self, im):
         im = im.copy()
+        mask = Image.new("L", im.size, "white")
         ox = 1250
         oy = 1900
-        self.distorted_ellipse(im,
+        self.distorted_ellipse(mask,
                           (ox-self.w*500, oy-self.h*200),
                           (ox, oy+self.h*200),
                           (ox-self.w*300, oy),
-                          self.f,
+                          "black",
                           stroke_width=[0, 0, 15, 15])
-        return im
+        composite = Image.composite(im, self.get_pattern(im), mask)
+        return composite
 
 # Right cheek
 class RightCheek(Head):
-    def __init__(self, width=1, height=1, fill=(242, 140, 40)):
+    def __init__(self, width=1, height=1):
         self.w = width
         self.h = height
-        self.f = fill
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 0.95
     def draw(self, im):
         im = im.copy()
+        mask = Image.new("L", im.size, "white")
         ox = 1250
         oy = 1900
-        self.distorted_ellipse(im,
+        self.distorted_ellipse(mask,
                           (ox, oy-self.h*200),
                           (ox+self.w*500, oy+self.h*200),
                           (ox+self.w*300, oy),
-                          self.f,
+                          "black",
                           stroke_width=[0, 0, 15, 15])
-        return im
+        composite = Image.composite(im, self.get_pattern(im), mask)
+        return composite
 
 # Left ear
 class LeftEar(Head):
     def __init__(self, width=1, height=1,
-                 turn=0.0,
-                 inner_fill=(184, 115, 51),
-                 outer_fill=(205, 127, 50)):
+                 turn=0.0):
         self.w = width
         self.h = height
         self.t = turn
-        self.i_f = inner_fill
-        self.o_f = outer_fill
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 1.0
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -250,32 +313,38 @@ class LeftEar(Head):
         # Rescale rotation origin as well
         mask = mask.rotate(self.t*45, fillcolor="white",
                            center=self.rescale((o_ox, o_oy), mask.size))
-        ear = Image.new("RGBA", im.size, self.o_f)
+        composite = Image.composite(im, self.get_pattern(im), mask)
+        # Now the inner ear, same idea, but different
+        # Darken the inner ear
+        inner_ear = self.get_pattern(im)
+        enchance_obj = ImageEnhance.Brightness(inner_ear)
+        inner_ear = enchance_obj.enhance(0.9)
+        inner_ear_mask = Image.new("L", im.size, "white")
         i_ox = 450
         i_oy = 600
-        self.distorted_ellipse(ear,
+        self.distorted_ellipse(inner_ear_mask,
                           (i_ox-(self.t+self.w)*100, i_oy-self.h*400+self.t*200),
                           (i_ox+(1-self.t)*self.w*300, i_oy+self.h*200+self.t*100),
                           (i_ox-self.t*150, i_oy),
-                          self.i_f)
+                          "black")
         # Rescale rotation origin as well
-        ear = ear.rotate(self.t*45, fillcolor="white",
+        inner_ear_mask = inner_ear_mask.rotate(self.t*45, fillcolor="white",
                          center=self.rescale((o_ox, o_oy), mask.size))
-        # Perform the composite
-        composite = Image.composite(im, ear, mask)
+        # Perform the second composite
+        composite = Image.composite(composite, inner_ear, inner_ear_mask)
         return composite
 
 # Right ear
 class RightEar(Head):
     def __init__(self, width=1, height=1,
-                 turn=0.0,
-                 inner_fill=(184, 115, 51),
-                 outer_fill=(205, 127, 50)):
+                 turn=0.0):
         self.w = width
         self.h = height
         self.t = turn
-        self.i_f = inner_fill
-        self.o_f = outer_fill
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 1.0
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -289,28 +358,37 @@ class RightEar(Head):
         # Rescale rotation origin as well
         mask = mask.rotate(self.t*-45, fillcolor="white",
                            center=self.rescale((o_ox, o_oy), mask.size))
-        ear = Image.new("RGBA", im.size, self.o_f)
+        composite = Image.composite(im, self.get_pattern(im), mask)
+        # Now the inner ear, same idea, but different
+        # Darken the inner ear
+        inner_ear = self.get_pattern(im)
+        enchance_obj = ImageEnhance.Brightness(inner_ear)
+        inner_ear = enchance_obj.enhance(0.9)
+        inner_ear_mask = Image.new("L", im.size, "white")
         i_ox = 2050
         i_oy = 600
-        self.distorted_ellipse(ear,
+        self.distorted_ellipse(inner_ear_mask,
                           (i_ox-(1-self.t)*self.w*300, i_oy-self.h*400+self.t*200),
                           (i_ox+(self.t+self.w)*100, i_oy+self.h*200+self.t*100),
                           (i_ox+self.t*150, i_oy),
-                          self.i_f)
+                          "black")
         # Rescale rotation origin as well
-        ear = ear.rotate(self.t*-45, fillcolor="white",
+        inner_ear_mask = inner_ear_mask.rotate(self.t*-45, fillcolor="white",
                          center=self.rescale((o_ox, o_oy), mask.size))
-        # Perform the composite
-        composite = Image.composite(im, ear, mask)
+        # Perform the second composite
+        composite = Image.composite(composite, inner_ear, inner_ear_mask)
         return composite
 
 # Nose
 class Nose(Head):
-    def __init__(self, width=1, height=1, upper_lip=True, fill=(160, 82, 45)):
+    def __init__(self, width=1, height=1, upper_lip=True):
         self.w = width
         self.h = height
         self.upper_lip = upper_lip
-        self.f = fill
+        self.fill = None
+        self.nose = (160, 82, 45)
+        self.white_neck = False
+        self.brightness = 1.0
     def draw(self, im):
         im = im.copy()
         ox = 1250
@@ -320,7 +398,7 @@ class Nose(Head):
         self.draw_polygon(im, xy=[(ox-self.w*200, oy-self.h*100),
                                   (ox, oy+self.h*100),
                                   (ox+self.w*200, oy-self.h*100)],
-                                  fill=self.f)
+                                  fill=self.nose)
         return im
 
 # Left eye

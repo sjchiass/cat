@@ -20,7 +20,7 @@ cat0 = [Head(),
 image = Image.new("RGB", (2500, 2500), (255, 255, 255))
 
 for x in cat0:
-    image = x.draw(image)
+    image = x.set_pattern("orange").draw(image)
 
 # Save the image for easier git versioning
 image.save("cat.png")
@@ -75,13 +75,13 @@ images = [
 ]
 
 for x in cat0:
-    images[0] = x.draw(images[0])
+    images[0] = x.set_pattern("orange").draw(images[0])
 for x in cat1:
-    images[1] = x.draw(images[1])
+    images[1] = x.set_pattern("orange").draw(images[1])
 for x in cat2:
-    images[2] = x.draw(images[2])
+    images[2] = x.set_pattern("orange").draw(images[2])
 for x in cat3:
-    images[3] = x.draw(images[3])
+    images[3] = x.set_pattern("orange").draw(images[3])
 
 images = [i.resize((250, 250)) for i in images]
 
