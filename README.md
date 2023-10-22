@@ -4,6 +4,8 @@
 
 !["Various cats"](./collage.png)
 
+!["Various patterns"](./pattern_collage.png)
+
 # TODO
 
   * Separate standard properties and methods into a Cat() class instead of just the Head() class
