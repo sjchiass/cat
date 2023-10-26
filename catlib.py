@@ -1,4 +1,5 @@
 import math
+import random
 from PIL import Image, ImageDraw, ImageEnhance
 
 # Background
@@ -27,6 +28,18 @@ class Head:
         "russian blue" : {"fill" : (102, 109, 113),
                           "nose" : (25, 30, 32),
                     "white_neck" : False},
+        "calico" : {"fill" : (32, 32, 36),
+                    "nose" : (160, 82, 45),
+                    "white_neck" : True,
+                    "spots" : [(205, 127, 50), (160, 73, 30)]},
+        "calico_spots" : {"fill" : "white",
+                    "nose" : (255, 167, 166),
+                    "white_neck" : False,
+                    "spots" : [(205, 127, 50), (160, 73, 30), (32, 32, 36)]},
+        "tortoiseshell" : {"fill" : (32, 32, 36),
+                    "nose" : "black",
+                    "white_neck" : False,
+                    "spots" : [(205, 127, 50), (160, 73, 30)]}
     }
     def __init__(self, width=1, height=1):
         self.w = width
@@ -35,6 +48,7 @@ class Head:
         self.nose = None
         self.white_neck = False
         self.brightness = 1.0
+        self.spots = None
     def draw(self, im):
         # All of the classes' draw methods copy the given image
         # and return the modified copy. This means that you can
@@ -152,7 +166,7 @@ class Head:
                                 end=180,
                                 fill="black",
                                 width=stroke_width[3])
-    def set_pattern(self, pattern_name=None, fill=None, nose=None, white_neck=None, brightness=None):
+    def set_pattern(self, pattern_name=None, fill=None, nose=None, white_neck=None, brightness=None, spots=None):
         if pattern_name is not None:
             for key in self.pattern_dict[pattern_name]:
                 setattr(self, key, self.pattern_dict[pattern_name][key])
@@ -164,12 +178,22 @@ class Head:
             self.white_neck = white_neck
         if brightness is not None:
             self.brightness = brightness
+        if spots is not None:
+            self.spots = spots
         return self
     def get_pattern(self, im):
         pattern = Image.new("RGB", im.size, (255, 255, 255))
         draw_obj = ImageDraw.Draw(pattern)
         if self.fill is not None:
             draw_obj.rectangle([(0, 0), (pattern.width, pattern.height)], fill=self.fill)
+        if self.spots is not None:
+            
+            for i in range(12):
+                x = (3 * i * pattern.width // 5) % pattern.width
+                y = (5 * i * pattern.width // 7) % pattern.width
+                s = (3*i*(pattern.width+pattern.height)//7) % ((pattern.width+pattern.height)//5)
+                f = self.spots[i % len(self.spots)]
+                draw_obj.ellipse([(x, y), (x+s, y+s)], f)
         if self.white_neck:
             draw_obj.polygon([(pattern.width/2, pattern.height/2), (pattern.width, pattern.height), (0, pattern.height)], fill="white")
         if self.brightness != 1.0:
@@ -193,6 +217,7 @@ class Mouth(Head):
         self.nose = None
         self.white_neck = False
         self.brightness = 0.9
+        self.spots = None
     def draw(self, im):
         im = im.copy()
         # Each part of the mouth is overlaid on the previous
@@ -252,6 +277,7 @@ class LeftCheek(Head):
         self.nose = None
         self.white_neck = False
         self.brightness = 0.95
+        self.spots = None
     def draw(self, im):
         im = im.copy()
         mask = Image.new("L", im.size, "white")
@@ -275,6 +301,7 @@ class RightCheek(Head):
         self.nose = None
         self.white_neck = False
         self.brightness = 0.95
+        self.spots = None
     def draw(self, im):
         im = im.copy()
         mask = Image.new("L", im.size, "white")
@@ -300,6 +327,7 @@ class LeftEar(Head):
         self.nose = None
         self.white_neck = False
         self.brightness = 1.0
+        self.spots = None
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -345,6 +373,7 @@ class RightEar(Head):
         self.nose = None
         self.white_neck = False
         self.brightness = 1.0
+        self.spots = None
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -389,6 +418,7 @@ class Nose(Head):
         self.nose = (160, 82, 45)
         self.white_neck = False
         self.brightness = 1.0
+        self.spots = None
     def draw(self, im):
         im = im.copy()
         ox = 1250
