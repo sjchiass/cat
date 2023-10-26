@@ -2,8 +2,8 @@ import math
 import random
 from PIL import Image, ImageDraw, ImageEnhance
 
-# Background
-class Head:
+# Base class full of methods and other data
+class Cat:
     # The canvas size the layers were designed in.
     # The actual output images are rescaled from this design size
     # to the actual size of the image being drawn.
@@ -41,28 +41,6 @@ class Head:
                     "white_neck" : False,
                     "spots" : [(205, 127, 50), (160, 73, 30)]}
     }
-    def __init__(self, width=1, height=1):
-        self.w = width
-        self.h = height
-        self.fill = None
-        self.nose = None
-        self.white_neck = False
-        self.brightness = 1.0
-        self.spots = None
-    def draw(self, im):
-        # All of the classes' draw methods copy the given image
-        # and return the modified copy. This means that you can
-        # keep a history of your modifications, for example for
-        # an animation of a sequence of images.
-        im = im.copy()
-        mask = Image.new("L", im.size, "white")
-        ox = 1250
-        oy = 1500
-        self.draw_ellipse(mask, xy=[(ox-self.w*1000, oy-self.h*1000),
-                         (ox+self.w*1000, oy+self.h*1000)],
-                     fill="black")
-        composite = Image.composite(im, self.get_pattern(im), mask)
-        return composite
     def rescale_1d(self, a, im_size_tuple):
         return round(a*(im_size_tuple[0]+im_size_tuple[1])/(self.__ref_width+self.__ref_height))
     def rescale(self, x_y_tuple, im_size_tuple):
@@ -200,6 +178,31 @@ class Head:
             enhance_obj = ImageEnhance.Brightness(pattern)
             pattern = enhance_obj.enhance(self.brightness)
         return pattern
+
+# Background
+class Head(Cat):
+    def __init__(self, width=1, height=1):
+        self.w = width
+        self.h = height
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 1.0
+        self.spots = None
+    def draw(self, im):
+        # All of the classes' draw methods copy the given image
+        # and return the modified copy. This means that you can
+        # keep a history of your modifications, for example for
+        # an animation of a sequence of images.
+        im = im.copy()
+        mask = Image.new("L", im.size, "white")
+        ox = 1250
+        oy = 1500
+        self.draw_ellipse(mask, xy=[(ox-self.w*1000, oy-self.h*1000),
+                         (ox+self.w*1000, oy+self.h*1000)],
+                     fill="black")
+        composite = Image.composite(im, self.get_pattern(im), mask)
+        return composite
 
 # Mouth
 class Mouth(Head):
