@@ -8,6 +8,7 @@
 
 # TODO
 
-  * Add tabby pattern
+  * Add brown tabby
+  * Allow custom neck color
   * Add paws
   * Add special things

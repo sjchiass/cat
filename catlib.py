@@ -12,34 +12,49 @@ class Cat:
     pattern_dict = {
         "orange" : {"fill" : (205, 127, 50),
                     "nose" : (160, 82, 45),
-                    "white_neck" : False},
+                    "white_neck" : False,
+                    "spots" : None,
+                    "tabby" : None},
         "orange tabby" : {"fill" : (205, 127, 50),
                     "nose" : (255, 167, 166),
-                    "white_neck" : True},
+                    "white_neck" : True,
+                    "spots" : None,
+                    "tabby" : (160, 73, 30)},
         "tuxedo" : {"fill" : (32, 32, 36),
                           "nose" : "black",
-                    "white_neck" : True},
+                    "white_neck" : True,
+                    "spots" : None,
+                    "tabby" : None},
         "black" : {"fill" : (32, 32, 36),
                           "nose" : "black",
-                    "white_neck" : False},
+                    "white_neck" : False,
+                    "spots" : None,
+                    "tabby" : None},
         "grey tabby" : {"fill" : "grey",
                     "nose" : (160, 82, 45),
-                    "white_neck" : True},
+                    "white_neck" : True,
+                    "spots" : None,
+                    "tabby" : (64, 64, 64)},
         "russian blue" : {"fill" : (102, 109, 113),
                           "nose" : (25, 30, 32),
-                    "white_neck" : False},
+                    "white_neck" : False,
+                    "spots" : None,
+                    "tabby" : None},
         "calico" : {"fill" : (32, 32, 36),
                     "nose" : (160, 82, 45),
                     "white_neck" : True,
-                    "spots" : [(205, 127, 50), (160, 73, 30)]},
+                    "spots" : [(205, 127, 50), (160, 73, 30)],
+                    "tabby" : None},
         "calico_spots" : {"fill" : "white",
                     "nose" : (255, 167, 166),
                     "white_neck" : False,
-                    "spots" : [(205, 127, 50), (160, 73, 30), (32, 32, 36)]},
+                    "spots" : [(205, 127, 50), (160, 73, 30), (32, 32, 36)],
+                    "tabby" : None},
         "tortoiseshell" : {"fill" : (32, 32, 36),
                     "nose" : "black",
                     "white_neck" : False,
-                    "spots" : [(205, 127, 50), (160, 73, 30)]}
+                    "spots" : [(205, 127, 50), (160, 73, 30)],
+                    "tabby" : None}
     }
     def rescale_1d(self, a, im_size_tuple):
         return round(a*(im_size_tuple[0]+im_size_tuple[1])/(self.__ref_width+self.__ref_height))
@@ -144,7 +159,7 @@ class Cat:
                                 end=180,
                                 fill="black",
                                 width=stroke_width[3])
-    def set_pattern(self, pattern_name=None, fill=None, nose=None, white_neck=None, brightness=None, spots=None):
+    def set_pattern(self, pattern_name=None, fill=None, nose=None, white_neck=None, brightness=None, spots=None, tabby=None):
         if pattern_name is not None:
             for key in self.pattern_dict[pattern_name]:
                 setattr(self, key, self.pattern_dict[pattern_name][key])
@@ -158,6 +173,8 @@ class Cat:
             self.brightness = brightness
         if spots is not None:
             self.spots = spots
+        if tabby is not None:
+            self.tabby = tabby
         return self
     def get_pattern(self, im):
         pattern = Image.new("RGB", im.size, (255, 255, 255))
@@ -165,15 +182,63 @@ class Cat:
         if self.fill is not None:
             draw_obj.rectangle([(0, 0), (pattern.width, pattern.height)], fill=self.fill)
         if self.spots is not None:
-            
             for i in range(12):
                 x = (3 * i * pattern.width // 5) % pattern.width
                 y = (5 * i * pattern.width // 7) % pattern.width
                 s = (3*i*(pattern.width+pattern.height)//7) % ((pattern.width+pattern.height)//5)
                 f = self.spots[i % len(self.spots)]
                 draw_obj.ellipse([(x, y), (x+s, y+s)], f)
+        elif self.tabby is not None:
+            # M
+            draw_obj.polygon([(12*pattern.width//32, 6*pattern.height//16),
+                              (14*pattern.width//32, 4*pattern.height//16),
+                              (15*pattern.width//32, 6*pattern.height//16),
+                              (14*pattern.width//32, 5*pattern.height//16),
+                              ], self.tabby)
+            draw_obj.polygon([(16*pattern.width//32,  5*pattern.height//32),
+                              (17*pattern.width//32,  9*pattern.height//32),
+                              (16*pattern.width//32, 11*pattern.height//32),
+                              (15*pattern.width//32,  9*pattern.height//32),
+                              ], self.tabby)
+            draw_obj.polygon([(20*pattern.width//32, 6*pattern.height//16),
+                              (18*pattern.width//32, 4*pattern.height//16),
+                              (17*pattern.width//32, 6*pattern.height//16),
+                              (18*pattern.width//32, 5*pattern.height//16),
+                              ], self.tabby)
+            # Left markings
+            draw_obj.polygon([( 3*pattern.width//32, 18*pattern.height//32),
+                              ( 6*pattern.width//32, 15*pattern.height//32),
+                              ( 9*pattern.width//32, 15*pattern.height//32),
+                              ( 6*pattern.width//32, 16*pattern.height//32),
+                              ], self.tabby)
+            draw_obj.polygon([( 3*pattern.width//32, 20*pattern.height//32),
+                              ( 6*pattern.width//32, 17*pattern.height//32),
+                              ( 9*pattern.width//32, 17*pattern.height//32),
+                              ( 6*pattern.width//32, 18*pattern.height//32),
+                              ], self.tabby)
+            draw_obj.polygon([( 6*pattern.width//32, 22*pattern.height//32),
+                              ( 9*pattern.width//32, 19*pattern.height//32),
+                              (12*pattern.width//32, 19*pattern.height//32),
+                              ( 9*pattern.width//32, 20*pattern.height//32),
+                              ], self.tabby)
+            # Right markings
+            draw_obj.polygon([( 29*pattern.width//32, 18*pattern.height//32),
+                              ( 26*pattern.width//32, 15*pattern.height//32),
+                              ( 23*pattern.width//32, 15*pattern.height//32),
+                              ( 26*pattern.width//32, 16*pattern.height//32),
+                              ], self.tabby)
+            draw_obj.polygon([( 29*pattern.width//32, 20*pattern.height//32),
+                              ( 26*pattern.width//32, 17*pattern.height//32),
+                              ( 23*pattern.width//32, 17*pattern.height//32),
+                              ( 26*pattern.width//32, 18*pattern.height//32),
+                              ], self.tabby)
+            draw_obj.polygon([( 26*pattern.width//32, 22*pattern.height//32),
+                              ( 23*pattern.width//32, 19*pattern.height//32),
+                              ( 20*pattern.width//32, 19*pattern.height//32),
+                              ( 23*pattern.width//32, 20*pattern.height//32),
+                              ], self.tabby)
         if self.white_neck:
-            draw_obj.polygon([(pattern.width/2, pattern.height/2), (pattern.width, pattern.height), (0, pattern.height)], fill="white")
+            draw_obj.polygon([(pattern.width//2, pattern.height//2), (pattern.width, pattern.height), (0, pattern.height)], fill="white")
         if self.brightness != 1.0:
             enhance_obj = ImageEnhance.Brightness(pattern)
             pattern = enhance_obj.enhance(self.brightness)
@@ -189,6 +254,7 @@ class Head(Cat):
         self.white_neck = False
         self.brightness = 1.0
         self.spots = None
+        self.tabby = None
     def draw(self, im):
         # All of the classes' draw methods copy the given image
         # and return the modified copy. This means that you can
@@ -221,6 +287,7 @@ class Mouth(Head):
         self.white_neck = False
         self.brightness = 0.9
         self.spots = None
+        self.tabby = None
     def draw(self, im):
         im = im.copy()
         # Each part of the mouth is overlaid on the previous
@@ -281,6 +348,7 @@ class LeftCheek(Head):
         self.white_neck = False
         self.brightness = 0.95
         self.spots = None
+        self.tabby = None
     def draw(self, im):
         im = im.copy()
         mask = Image.new("L", im.size, "white")
@@ -305,6 +373,7 @@ class RightCheek(Head):
         self.white_neck = False
         self.brightness = 0.95
         self.spots = None
+        self.tabby = None
     def draw(self, im):
         im = im.copy()
         mask = Image.new("L", im.size, "white")
@@ -331,6 +400,7 @@ class LeftEar(Head):
         self.white_neck = False
         self.brightness = 1.0
         self.spots = None
+        self.tabby = None
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -377,6 +447,7 @@ class RightEar(Head):
         self.white_neck = False
         self.brightness = 1.0
         self.spots = None
+        self.tabby = None
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -422,6 +493,7 @@ class Nose(Head):
         self.white_neck = False
         self.brightness = 1.0
         self.spots = None
+        self.tabby = None
     def draw(self, im):
         im = im.copy()
         ox = 1250
