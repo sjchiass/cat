@@ -56,6 +56,13 @@ class Cat:
                     "spots" : [(205, 127, 50), (160, 73, 30)],
                     "tabby" : None}
     }
+    def __init__(self):
+        self.fill = None
+        self.nose = None
+        self.white_neck = False
+        self.brightness = 1.0
+        self.spots = None
+        self.tabby = None
     def rescale_1d(self, a, im_size_tuple):
         return round(a*(im_size_tuple[0]+im_size_tuple[1])/(self.__ref_width+self.__ref_height))
     def rescale(self, x_y_tuple, im_size_tuple):
@@ -247,14 +254,9 @@ class Cat:
 # Background
 class Head(Cat):
     def __init__(self, width=1, height=1):
+        super().__init__()
         self.w = width
         self.h = height
-        self.fill = None
-        self.nose = None
-        self.white_neck = False
-        self.brightness = 1.0
-        self.spots = None
-        self.tabby = None
     def draw(self, im):
         # All of the classes' draw methods copy the given image
         # and return the modified copy. This means that you can
@@ -276,18 +278,14 @@ class Mouth(Head):
                  openness = 0.0, 
                  chin_x_offset = 0.0, chin_y_offset = 0.0, 
                  width=1, height=1):
+        super().__init__()
         self.uox = 1250
         self.uoy = 1950
         self.cox = 1250 * (1 + chin_x_offset)
         self.coy = 2150 * (1 + chin_y_offset + openness*0.1)
         self.w = width
         self.h = height
-        self.fill = None
-        self.nose = None
-        self.white_neck = False
         self.brightness = 0.9
-        self.spots = None
-        self.tabby = None
     def draw(self, im):
         im = im.copy()
         # Each part of the mouth is overlaid on the previous
@@ -341,14 +339,10 @@ class Mouth(Head):
 # Left cheek
 class LeftCheek(Head):
     def __init__(self, width=1, height=1):
+        super().__init__()
         self.w = width
         self.h = height
-        self.fill = None
-        self.nose = None
-        self.white_neck = False
         self.brightness = 0.95
-        self.spots = None
-        self.tabby = None
     def draw(self, im):
         im = im.copy()
         mask = Image.new("L", im.size, "white")
@@ -366,14 +360,10 @@ class LeftCheek(Head):
 # Right cheek
 class RightCheek(Head):
     def __init__(self, width=1, height=1):
+        super().__init__()
         self.w = width
         self.h = height
-        self.fill = None
-        self.nose = None
-        self.white_neck = False
         self.brightness = 0.95
-        self.spots = None
-        self.tabby = None
     def draw(self, im):
         im = im.copy()
         mask = Image.new("L", im.size, "white")
@@ -392,15 +382,10 @@ class RightCheek(Head):
 class LeftEar(Head):
     def __init__(self, width=1, height=1,
                  turn=0.0):
+        super().__init__()
         self.w = width
         self.h = height
         self.t = turn
-        self.fill = None
-        self.nose = None
-        self.white_neck = False
-        self.brightness = 1.0
-        self.spots = None
-        self.tabby = None
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -439,15 +424,10 @@ class LeftEar(Head):
 class RightEar(Head):
     def __init__(self, width=1, height=1,
                  turn=0.0):
+        super().__init__()
         self.w = width
         self.h = height
         self.t = turn
-        self.fill = None
-        self.nose = None
-        self.white_neck = False
-        self.brightness = 1.0
-        self.spots = None
-        self.tabby = None
     def draw(self, im):
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
@@ -485,15 +465,10 @@ class RightEar(Head):
 # Nose
 class Nose(Head):
     def __init__(self, width=1, height=1, upper_lip=True):
+        super().__init__()
         self.w = width
         self.h = height
         self.upper_lip = upper_lip
-        self.fill = None
-        self.nose = (160, 82, 45)
-        self.white_neck = False
-        self.brightness = 1.0
-        self.spots = None
-        self.tabby = None
     def draw(self, im):
         im = im.copy()
         ox = 1250
@@ -514,6 +489,7 @@ class LeftEye(Head):
                  eye_width=1, eye_height=1,
                  pupil_width=1, pupil_height=1,
                  eye_fill=(9, 121, 105)):
+        super().__init__()
         self.ew = eye_width
         self.eh = eye_height * (1.25-squint)
         self.pw = pupil_width * (0.7+3*dilation)
@@ -561,6 +537,7 @@ class RightEye(Head):
                  eye_width=1, eye_height=1,
                  pupil_width=1, pupil_height=1,
                  eye_fill=(9, 121, 105)):
+        super().__init__()
         self.ew = eye_width
         self.eh = eye_height * (1.25-squint)
         self.pw = pupil_width * (0.7+3*dilation)
