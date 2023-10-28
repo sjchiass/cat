@@ -26,42 +26,42 @@ for x in cat0:
 image.save("cat.png")
 
 cat1 = [Head(),
-       Mouth(openness=0.5),
-       LeftCheek(width=1.2),
-       RightCheek(width=1.2),
+       Mouth(),
+       LeftCheek(),
+       RightCheek(),
        Nose(),
-       LeftEar(turn=0.5),
-       RightEar(turn=0.5),
-       LeftEye(squint=0.75, dilation=0.25),
-       RightEye(squint=0.75, dilation=0.25),
+       LeftEar(),
+       RightEar(),
+       LeftEye(),
+       RightEye(),
        LeftWhisker(),
        RightWhisker(),
        LeftEyebrow(),
        RightEyebrow()]
 
 cat2= [Head(),
-       Mouth(openness=1.0),
-       LeftCheek(width=1.35),
-       RightCheek(width=1.35),
+       Mouth(),
+       LeftCheek(),
+       RightCheek(),
        Nose(),
-       LeftEar(turn=1.0),
-       RightEar(turn=1.0),
-       LeftEye(squint=1.0, dilation=0.5),
-       RightEye(squint=1.0, dilation=0.5),
+       LeftEar(),
+       RightEar(),
+       LeftEye(),
+       RightEye(),
        LeftWhisker(),
        RightWhisker(),
        LeftEyebrow(),
        RightEyebrow()]
 
 cat3= [Head(width=1.25),
-       Mouth(openness=0.2),
-       LeftCheek(width=0.8),
-       RightCheek(width=0.8),
+       Mouth(),
+       LeftCheek(),
+       RightCheek(),
        Nose(),
        LeftEar(),
        RightEar(),
-       LeftEye(squint=0.25, dilation=1.0),
-       RightEye(squint=0.25, dilation=1.0),
+       LeftEye(),
+       RightEye(),
        LeftWhisker(),
        RightWhisker(),
        LeftEyebrow(),
@@ -75,13 +75,13 @@ images = [
 ]
 
 for x in cat0:
-    images[0] = x.set_pattern("orange").draw(images[0])
+    images[0] = x.set_pattern("orange").set_mood("neutral").draw(images[0])
 for x in cat1:
-    images[1] = x.set_pattern("orange").draw(images[1])
+    images[1] = x.set_pattern("orange").set_mood(["neutral", "angry"]).draw(images[1])
 for x in cat2:
-    images[2] = x.set_pattern("orange").draw(images[2])
+    images[2] = x.set_pattern("orange").set_mood("angry").draw(images[2])
 for x in cat3:
-    images[3] = x.set_pattern("orange").draw(images[3])
+    images[3] = x.set_pattern("orange").set_mood("excited", openness=0.2, turn=0.0).draw(images[3])
 
 images = [i.resize((250, 250)) for i in images]
 

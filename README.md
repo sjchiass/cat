@@ -6,6 +6,8 @@
 
 !["Various patterns"](./pattern_collage.png)
 
+!["Various moods"](./mood_collage.png)
+
 # TODO
 
   * Add brown tabby

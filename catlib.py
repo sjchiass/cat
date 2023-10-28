@@ -56,13 +56,87 @@ class Cat:
                     "spots" : [(205, 127, 50), (160, 73, 30)],
                     "tabby" : None}
     }
+    mood_dict = {
+        "neutral" : {
+            "openness" : 0.0,
+            "turn" : 0.0,
+            "squint" : 0.25,
+            "dilation" : 0.1,
+            "droopiness" : 0.5,
+            "tension" : 0.0,
+            "flatten" : 0.0
+        },
+        "angry" : {
+            "openness" : 1.25,
+            "turn" : 1.0,
+            "squint" : 0.75,
+            "dilation" : 0.25,
+            "droopiness" : 0.75,
+            "tension" : 0.0,
+            "flatten" : 0.0
+        },
+        "pain" : {
+            "openness" : 0.0,
+            "turn" : 1.0,
+            "squint" : 1.0,
+            "dilation" : 0.0,
+            "droopiness" : 0.0,
+            "tension" : 1.0,
+            "flatten" : 0.0
+        },
+        "sleepy" : {
+            "openness" : 0.0,
+            "turn" : 0.25,
+            "squint" : 0.75,
+            "dilation" : 0.1,
+            "droopiness" : 0.5,
+            "tension" : 0.0,
+            "flatten" : 0.0
+        },
+        "scared" : {
+            "openness" : -0.1,
+            "turn" : 1.0,
+            "squint" : 0.0,
+            "dilation" : 1.0,
+            "droopiness" : 0.5,
+            "tension" : 0.0,
+            "flatten" : 0.5
+        },
+        "happy" : {
+            "openness" : 0.0,
+            "turn" : 0.0,
+            "squint" : 1.0,
+            "dilation" : 0.25,
+            "droopiness" : 0.5,
+            "tension" : 0.0,
+            "flatten" : 0.0
+        },
+        "excited" : {
+            "openness" : 0.1,
+            "turn" : 0.5,
+            "squint" : 0.0,
+            "dilation" : 1.0,
+            "droopiness" : 0.5,
+            "tension" : 0.0,
+            "flatten" : 0.0
+        },
+    }
     def __init__(self):
-        self.fill = None
-        self.nose = None
+        # Default pattern
+        self.fill = "grey"
+        self.nose = "black"
         self.white_neck = False
         self.brightness = 1.0
-        self.spots = None
-        self.tabby = None
+        self.spots = ["grey"]
+        self.tabby = "grey"
+        # Default mood (neutral)
+        self.openness = 0.0
+        self.turn = 0.0
+        self.squint = 0.25
+        self.dilation = 0.1
+        self.droopiness = 0.5
+        self.tension = 0.0
+        self.flatten = 0.0
     def rescale_1d(self, a, im_size_tuple):
         return round(a*(im_size_tuple[0]+im_size_tuple[1])/(self.__ref_width+self.__ref_height))
     def rescale(self, x_y_tuple, im_size_tuple):
@@ -250,6 +324,27 @@ class Cat:
             enhance_obj = ImageEnhance.Brightness(pattern)
             pattern = enhance_obj.enhance(self.brightness)
         return pattern
+    def set_mood(self, mood_name=None, openness = None, turn = None, squint = None, dilation = None, droopiness = None):
+        if type(mood_name) is list:
+            avg = dict()
+            for k in self.mood_dict["neutral"]:
+                avg[k] = sum(self.mood_dict[m][k] for m in mood_name)/len(mood_name)
+            for key in avg:
+                setattr(self, key, avg[key])
+        elif mood_name is not None:
+            for key in self.mood_dict[mood_name]:
+                setattr(self, key, self.mood_dict[mood_name][key])
+        if openness is not None:
+            self.openness = openness
+        if turn is not None:
+            self.turn = turn
+        if squint is not None:
+            self.squint = squint
+        if dilation is not None:
+            self.dilation = dilation
+        if droopiness is not None:
+            self.droopiness = droopiness
+        return self
 
 # Background
 class Head(Cat):
@@ -275,24 +370,25 @@ class Head(Cat):
 # Mouth
 class Mouth(Head):
     def __init__(self, 
-                 openness = 0.0, 
                  chin_x_offset = 0.0, chin_y_offset = 0.0, 
                  width=1, height=1):
         super().__init__()
-        self.uox = 1250
-        self.uoy = 1950
-        self.cox = 1250 * (1 + chin_x_offset)
-        self.coy = 2150 * (1 + chin_y_offset + openness*0.1)
+        self.chin_x_offset = chin_x_offset
+        self.chin_y_offset = chin_y_offset
         self.w = width
         self.h = height
         self.brightness = 0.9
     def draw(self, im):
+        uox = 1250
+        uoy = 1950
+        cox = 1250 * (1 + self.chin_x_offset)
+        coy = 2150 * (1 + self.chin_y_offset + self.openness*0.1)
         im = im.copy()
         # Each part of the mouth is overlaid on the previous
         # lip over teeth, teeth over mouth hole
         # open mouth, basically a hole
-        self.draw_rectangle(im, xy=[(self.uox-self.w*175, self.uoy-self.h*50),
-                         (self.cox+self.w*175, self.coy)],
+        self.draw_rectangle(im, xy=[(uox-self.w*175, uoy-self.h*50),
+                         (cox+self.w*175, coy)],
                      fill=(0, 0, 0))
         # upper teef
         upper_teefs = [
@@ -304,8 +400,8 @@ class Mouth(Head):
             ( 100, 75,  150),
             ]
         for t in upper_teefs:
-            self.draw_ellipse(im, xy=[(self.uox+self.w*t[0], self.uoy-self.h*(50+t[1])),
-                               (self.uox+self.w*t[2], self.uoy+self.h*(50+t[1]))],
+            self.draw_ellipse(im, xy=[(uox+self.w*t[0], uoy-self.h*(50+t[1])),
+                               (uox+self.w*t[2], uoy+self.h*(50+t[1]))],
                         fill=(255, 255, 255))
         # lower teef
         lower_teefs = [
@@ -317,21 +413,21 @@ class Mouth(Head):
             ( 100, 75,  150),
             ]
         for t in lower_teefs:
-            self.draw_ellipse(im, xy=[(self.cox+self.w*t[0], self.coy-self.h*(175+t[1])),
-                               (self.cox+self.w*t[2], self.coy)],
+            self.draw_ellipse(im, xy=[(cox+self.w*t[0], coy-self.h*(175+t[1])),
+                               (cox+self.w*t[2], coy)],
                         fill=(255, 255, 255))
         # upper lip
-        self.draw_rectangle(im, xy=[(self.uox-self.w*175, self.uoy-self.h*50),
-                         (self.uox+self.w*175, self.uoy+self.h*50)],
+        self.draw_rectangle(im, xy=[(uox-self.w*175, uoy-self.h*50),
+                         (uox+self.w*175, uoy+self.h*50)],
                      fill=(74, 44, 42))
         # lower lip
-        self.draw_rectangle(im, xy=[(self.cox-self.w*175, self.coy-self.h*175),
-                         (self.cox+self.w*175, self.coy)],
+        self.draw_rectangle(im, xy=[(cox-self.w*175, coy-self.h*175),
+                         (cox+self.w*175, coy)],
                      fill=(74, 44, 42))
         # chin
         mask = Image.new("L", im.size, "white")
-        self.draw_ellipse(mask, xy=[(self.cox-self.w*200, self.coy-self.h*150),
-                         (self.cox+self.w*200, self.coy+self.h*150)],
+        self.draw_ellipse(mask, xy=[(cox-self.w*200, coy-self.h*150),
+                         (cox+self.w*200, coy+self.h*150)],
                      fill="black")
         composite = Image.composite(im, self.get_pattern(im), mask)
         return composite
@@ -340,18 +436,20 @@ class Mouth(Head):
 class LeftCheek(Head):
     def __init__(self, width=1, height=1):
         super().__init__()
-        self.w = width
-        self.h = height
+        self.width = width
+        self.height = height
         self.brightness = 0.95
     def draw(self, im):
+        w = self.width*(1+self.tension/4)
+        h = self.height
         im = im.copy()
         mask = Image.new("L", im.size, "white")
         ox = 1250
         oy = 1900
         self.distorted_ellipse(mask,
-                          (ox-self.w*500, oy-self.h*200),
-                          (ox, oy+self.h*200),
-                          (ox-self.w*300, oy),
+                          (ox-w*500, oy-h*200),
+                          (ox, oy+h*200),
+                          (ox-w*300, oy),
                           "black",
                           stroke_width=[0, 0, 15, 15])
         composite = Image.composite(im, self.get_pattern(im), mask)
@@ -361,18 +459,20 @@ class LeftCheek(Head):
 class RightCheek(Head):
     def __init__(self, width=1, height=1):
         super().__init__()
-        self.w = width
-        self.h = height
+        self.width = width
+        self.height = height
         self.brightness = 0.95
     def draw(self, im):
+        w = self.width*(1+self.tension/3)
+        h = self.height
         im = im.copy()
         mask = Image.new("L", im.size, "white")
         ox = 1250
         oy = 1900
         self.distorted_ellipse(mask,
-                          (ox, oy-self.h*200),
-                          (ox+self.w*500, oy+self.h*200),
-                          (ox+self.w*300, oy),
+                          (ox, oy-h*200),
+                          (ox+w*500, oy+h*200),
+                          (ox+w*300, oy),
                           "black",
                           stroke_width=[0, 0, 15, 15])
         composite = Image.composite(im, self.get_pattern(im), mask)
@@ -380,24 +480,24 @@ class RightCheek(Head):
 
 # Left ear
 class LeftEar(Head):
-    def __init__(self, width=1, height=1,
-                 turn=0.0):
+    def __init__(self, width=1, height=1):
         super().__init__()
         self.w = width
-        self.h = height
-        self.t = turn
+        self.height = height
     def draw(self, im):
+        h = (1 - self.flatten/2) * self.height
+        t = self.turn
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
         o_ox = 450
         o_oy = 800
         self.distorted_ellipse(mask,
-                          (o_ox-self.w*200-self.t*100, o_oy-self.h*700+self.t*200),
-                          (o_ox+self.w*600, o_oy+self.h*400),
-                          (o_ox-self.t*100, o_oy+self.t*200),
+                          (o_ox-self.w*200-t*100, o_oy-h*700+t*200),
+                          (o_ox+self.w*600, o_oy+h*400),
+                          (o_ox-t*100, o_oy+t*200),
                           "black")
         # Rescale rotation origin as well
-        mask = mask.rotate(self.t*45, fillcolor="white",
+        mask = mask.rotate(t*45, fillcolor="white",
                            center=self.rescale((o_ox, o_oy), mask.size))
         composite = Image.composite(im, self.get_pattern(im), mask)
         # Now the inner ear, same idea, but different
@@ -409,12 +509,12 @@ class LeftEar(Head):
         i_ox = 450
         i_oy = 600
         self.distorted_ellipse(inner_ear_mask,
-                          (i_ox-(self.t+self.w)*100, i_oy-self.h*400+self.t*200),
-                          (i_ox+(1-self.t)*self.w*300, i_oy+self.h*200+self.t*100),
-                          (i_ox-self.t*150, i_oy),
+                          (i_ox-(t+self.w)*100, i_oy-h*400+t*200),
+                          (i_ox+(1-t)*self.w*300, i_oy+h*200+t*100),
+                          (i_ox-t*150, i_oy),
                           "black")
         # Rescale rotation origin as well
-        inner_ear_mask = inner_ear_mask.rotate(self.t*45, fillcolor="white",
+        inner_ear_mask = inner_ear_mask.rotate(t*45, fillcolor="white",
                          center=self.rescale((o_ox, o_oy), mask.size))
         # Perform the second composite
         composite = Image.composite(composite, inner_ear, inner_ear_mask)
@@ -422,24 +522,24 @@ class LeftEar(Head):
 
 # Right ear
 class RightEar(Head):
-    def __init__(self, width=1, height=1,
-                 turn=0.0):
+    def __init__(self, width=1, height=1):
         super().__init__()
         self.w = width
-        self.h = height
-        self.t = turn
+        self.height = height
     def draw(self, im):
+        h = (1 - self.flatten/2) * self.height
+        t = self.turn
         mask = Image.new("L", im.size, "white")
         # Draw the outer ear first
         o_ox = 2050
         o_oy = 800
         self.distorted_ellipse(mask,
-                          (o_ox-self.w*600, o_oy-self.h*700+self.t*200),
-                          (o_ox+self.w*200+self.t*100, o_oy+self.h*400),
-                          (o_ox+self.t*100, o_oy+self.t*200),
+                          (o_ox-self.w*600, o_oy-h*700+t*200),
+                          (o_ox+self.w*200+t*100, o_oy+h*400),
+                          (o_ox+t*100, o_oy+t*200),
                           "black")
         # Rescale rotation origin as well
-        mask = mask.rotate(self.t*-45, fillcolor="white",
+        mask = mask.rotate(t*-45, fillcolor="white",
                            center=self.rescale((o_ox, o_oy), mask.size))
         composite = Image.composite(im, self.get_pattern(im), mask)
         # Now the inner ear, same idea, but different
@@ -451,12 +551,12 @@ class RightEar(Head):
         i_ox = 2050
         i_oy = 600
         self.distorted_ellipse(inner_ear_mask,
-                          (i_ox-(1-self.t)*self.w*300, i_oy-self.h*400+self.t*200),
-                          (i_ox+(self.t+self.w)*100, i_oy+self.h*200+self.t*100),
-                          (i_ox+self.t*150, i_oy),
+                          (i_ox-(1-t)*self.w*300, i_oy-h*400+t*200),
+                          (i_ox+(t+self.w)*100, i_oy+h*200+t*100),
+                          (i_ox+t*150, i_oy),
                           "black")
         # Rescale rotation origin as well
-        inner_ear_mask = inner_ear_mask.rotate(self.t*-45, fillcolor="white",
+        inner_ear_mask = inner_ear_mask.rotate(t*-45, fillcolor="white",
                          center=self.rescale((o_ox, o_oy), mask.size))
         # Perform the second composite
         composite = Image.composite(composite, inner_ear, inner_ear_mask)
@@ -483,19 +583,22 @@ class Nose(Head):
 
 # Left eye
 class LeftEye(Head):
-    def __init__(self, 
-                 squint = 0.25,
-                 dilation = 0.1,
+    def __init__(self,
                  eye_width=1, eye_height=1,
                  pupil_width=1, pupil_height=1,
                  eye_fill=(9, 121, 105)):
         super().__init__()
-        self.ew = eye_width
-        self.eh = eye_height * (1.25-squint)
-        self.pw = pupil_width * (0.7+3*dilation)
-        self.ph = pupil_height * (0.9+0.5*dilation)
-        self.ef = eye_fill
+        self.eye_width = eye_width
+        self.eye_height = eye_height
+        self.pupil_width = pupil_width
+        self.pupil_height = pupil_height
+        self.eye_fill = eye_fill
     def draw(self, im):
+        ew = self.eye_width
+        eh = self.eye_height * (1.0-self.squint)
+        pw = self.pupil_width * (0.7+3*self.dilation)
+        ph = self.pupil_height * (0.9+0.5*self.dilation)
+        ef = self.eye_fill
         eox = 850
         eoy = 1200
         pox = 850
@@ -507,23 +610,23 @@ class LeftEye(Head):
         mask = Image.new("L", im.size, "white")
         # Left eye mask
         self.draw_pieslice(mask,
-                          [(eox-self.ew*250, eoy-self.eh*200),
-                          (eox+self.ew*250, eoy+self.eh*200)],
+                          [(eox-ew*250, eoy-eh*200),
+                          (eox+ew*250, eoy+eh*200)],
                           start=180, end=0,
                           fill="black")
         self.distorted_ellipse(mask,
-                          (eox-self.ew*250, eoy-self.eh*200),
-                          (eox+self.ew*250, eoy+self.eh*200),
+                          (eox-ew*250, eoy-eh*200),
+                          (eox+ew*250, eoy+eh*200),
                           (eox-50, eoy),
                           "black",
                           quadrants=(False, False, True, True))
-        eye = Image.new("RGBA", im.size, self.ef)
+        eye = Image.new("RGBA", im.size, ef)
         # Rescale rotation origin as well
         mask = mask.rotate(-30, fillcolor="white",
                          center=self.rescale((eox, eoy), mask.size))
         # Pupil
-        self.draw_ellipse(eye, xy=[(pox-self.pw*50, poy-self.ph*150),
-                             (pox+self.pw*50, poy+self.ph*150)],
+        self.draw_ellipse(eye, xy=[(pox-pw*50, poy-ph*150),
+                             (pox+pw*50, poy+ph*150)],
                              fill=(0, 0, 0))
         # Perform the composite
         composite = Image.composite(im, eye, mask)
@@ -532,18 +635,21 @@ class LeftEye(Head):
 # Right eye
 class RightEye(Head):
     def __init__(self,
-                 squint = 0.25,
-                 dilation = 0.1,
                  eye_width=1, eye_height=1,
                  pupil_width=1, pupil_height=1,
                  eye_fill=(9, 121, 105)):
         super().__init__()
-        self.ew = eye_width
-        self.eh = eye_height * (1.25-squint)
-        self.pw = pupil_width * (0.7+3*dilation)
-        self.ph = pupil_height * (0.9+0.5*dilation)
-        self.ef = eye_fill
+        self.eye_width = eye_width
+        self.eye_height = eye_height
+        self.pupil_width = pupil_width
+        self.pupil_height = pupil_height
+        self.eye_fill = eye_fill
     def draw(self, im):
+        ew = self.eye_width
+        eh = self.eye_height * (1.0-self.squint)
+        pw = self.pupil_width * (0.7+3*self.dilation)
+        ph = self.pupil_height * (0.9+0.5*self.dilation)
+        ef = self.eye_fill
         eox = 1650
         eoy = 1200
         pox = 1650
@@ -555,24 +661,24 @@ class RightEye(Head):
         mask = Image.new("L", im.size, "white")
         # Left eye mask
         self.distorted_ellipse(mask,
-                          (eox-self.ew*250, eoy-self.eh*200),
-                          (eox+self.ew*250, eoy+self.eh*200),
+                          (eox-ew*250, eoy-eh*200),
+                          (eox+ew*250, eoy+eh*200),
                           (eox-50, eoy),
                           "black",
                           quadrants=(True, True, False, False))
         self.distorted_ellipse(mask,
-                          (eox-self.ew*250, eoy-self.eh*200),
-                          (eox+self.ew*250, eoy+self.eh*200),
+                          (eox-ew*250, eoy-eh*200),
+                          (eox+ew*250, eoy+eh*200),
                           (eox+50, eoy),
                           "black",
                           quadrants=(False, False, True, True))
-        eye = Image.new("RGBA", im.size, self.ef)
+        eye = Image.new("RGBA", im.size, ef)
         # Rescale rotation origin as well
         mask = mask.rotate(30, fillcolor="white",
                          center=self.rescale((eox, eoy), mask.size))
         # Pupil
-        self.draw_ellipse(eye, xy=[(pox-self.pw*50, poy-self.ph*150),
-                             (pox+self.pw*50, poy+self.ph*150)],
+        self.draw_ellipse(eye, xy=[(pox-pw*50, poy-ph*150),
+                             (pox+pw*50, poy+ph*150)],
                              fill=(0, 0, 0))
         # Perform the composite
         composite = Image.composite(im, eye, mask)
@@ -585,13 +691,13 @@ class RightEye(Head):
 # What this all does is create a curve that spins on an origin
 class LeftWhisker(Head):
     def __init__(self, width=1, height=1,
-                 droopiness=0.5, length=0.75,
+                 length=0.75,
                  fill="white", thickness=2,
                  whiskers = 5):
+        super().__init__()
         self.w = width
         self.h = height
         self.f = fill
-        self.d = droopiness
         self.l = length
         self.t = thickness
         self.ox = 1000
@@ -602,7 +708,7 @@ class LeftWhisker(Head):
         im = im.copy()
         for w in range(self.n):
             oy = self.oy + w//2*50
-            d = self.d+w/5
+            d = self.droopiness+w/5
             if self.flip:
                 ox = self.ox + w%2*100
                 phase = d*math.pi/2
@@ -628,13 +734,14 @@ class LeftWhisker(Head):
 
 class RightWhisker(LeftWhisker):
     def __init__(self, width=1, height=1,
-                 droopiness=0.5, length=0.75,
+                 length=0.75,
                  fill="white", thickness=2,
                  whiskers=5):
+        super().__init__()
         self.w = width
         self.h = height
         self.f = fill
-        self.d = droopiness
+        self.d = self.droopiness
         self.l = length
         self.t = thickness
         self.ox = 1500
@@ -644,13 +751,14 @@ class RightWhisker(LeftWhisker):
 
 class LeftEyebrow(LeftWhisker):
     def __init__(self, width=1, height=1,
-                 droopiness=0.0, length=0.75,
+                 length=0.75,
                  fill="white", thickness=1,
                  whiskers=2):
+        super().__init__()
         self.w = width
         self.h = height
         self.f = fill
-        self.d = droopiness
+        self.d = self.droopiness
         self.l = length
         self.t = thickness
         self.ox = 1050
@@ -660,13 +768,14 @@ class LeftEyebrow(LeftWhisker):
 
 class RightEyebrow(LeftWhisker):
     def __init__(self, width=1, height=1,
-                 droopiness=0.0, length=0.75,
+                 length=0.75,
                  fill="white", thickness=1,
                  whiskers=2):
+        super().__init__()
         self.w = width
         self.h = height
         self.f = fill
-        self.d = droopiness
+        self.d = self.droopiness
         self.l = length
         self.t = thickness
         self.ox = 1450
