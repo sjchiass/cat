@@ -258,7 +258,7 @@ class Cat:
             self.tabby = tabby
         return self
     def get_pattern(self, im):
-        pattern = Image.new("RGB", im.size, (255, 255, 255))
+        pattern = Image.new("RGBA", im.size, (255, 0, 0, 0))
         draw_obj = ImageDraw.Draw(pattern)
         if self.fill is not None:
             draw_obj.rectangle([(0, 0), (pattern.width, pattern.height)], fill=self.fill)
