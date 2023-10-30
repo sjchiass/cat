@@ -41,13 +41,13 @@ class BubbleChart():
 
     # Drawing a datapoint is creating a small cat image and pasting it
     # in the right place
-    def draw_datapoint(self, im, xmin, xmax, ymin, ymax, amax, W, H, x, y, a, pattern):
+    def draw_datapoint(self, im, x, y, a, pattern):
         im = im.copy()
         # Data values affect marker area, so a data point 25% the value
         # of another is 50% its width and 50% is height.
         marker = Image.new("RGBA",
-                        (int(im.width/10*math.sqrt(a/amax)),
-                            int(im.height/10*math.sqrt(a/amax))),
+                        (int(im.width/10*math.sqrt(a/self.amax)),
+                            int(im.height/10*math.sqrt(a/self.amax))),
                             (255, 0, 0, 0))
         cat = [Head(),
             Mouth(),
@@ -62,75 +62,118 @@ class BubbleChart():
         for layer in cat:
             marker = layer.set_pattern(pattern).draw(marker)
             
-        im.paste(marker, self.graph_space_projection((W//5, H//5), (3*W//5, 3*H//5), (xmin, xmax), (ymin, ymax), (x, y), marker.size), marker)
+        im.paste(marker, self.graph_space_projection((self.W//5, self.H//5),
+                                                     (3*self.W//5, 3*self.H//5),
+                                                     (self.xmin, self.xmax),
+                                                     (self.ymin, self.ymax),
+                                                     (x, y),
+                                                     marker.size), marker)
         return im
 
     def __init__(self, x, y, a, m, p, x_label, y_label, a_label, m_label, title, W, H):
-        m = [str(m) for m in m]
+        self.x = x
+        self.y = y
+        self.a = a
+        self.m = m
+        self.p = p
+        self.x_label = x_label
+        self.y_label = y_label
+        self.a_label = a_label
+        self.m_label = m_label
+        self.title = title
+        self.W = W
+        self.H = H
 
-        markers = dict()
-        m_list = np.unique(m)
-        for marker, pattern in zip(m_list, p):
-            markers[marker] = pattern
+        self.m = [str(self.m) for self.m in self.m]
+
+        self.markers = dict()
+        m_list = np.unique(self.m)
+        for marker, pattern in zip(m_list, self.p):
+            self.markers[marker] = pattern
 
         # xmax and ymax
         # Here I start at 0 and go 10% above the real max
-        xmin = 0
-        xmax = max(x)*1.1
-        ymin = 0
-        ymax = max(y)*1.1
-        amax = max(a)
+        self.xmin = 0
+        self.xmax = max(x)*1.1
+        self.ymin = 0
+        self.ymax = max(y)*1.1
+        self.amax = max(a)
 
-        image = Image.new("RGBA", (W, H), (255, 255, 255))
+        self.image = Image.new("RGBA", (W, H), (255, 255, 255))
+        
+        self.data()
+        self.axes()
+        self.legend()
 
-        for _x, _y, _a, _m in zip(x, y, a, m):
-            image = self.draw_datapoint(image, xmin, xmax, ymin, ymax, amax, W, H, _x, _y, _a, markers[_m])
+    def image(self):
+        return self.image
 
-        font = ImageFont.truetype("DejaVuSans.ttf", (W+H)//100)
-        draw_obj = ImageDraw.Draw(image)
+    def data(self):
+        # Draw data
+        for _x, _y, _a, _m in zip(self.x, self.y, self.a, self.m):
+            self.image = self.draw_datapoint(self.image, _x, _y, _a, self.markers[_m])
+
+    def axes(self):
+        font = ImageFont.truetype("DejaVuSans.ttf", (self.W+self.H)//100)
+        draw_obj = ImageDraw.Draw(self.image)
 
         # Axes
-        draw_obj.line([(W//5, H//5), (W//5, 4*H//5), (4*W//5, 4*H//5)], "black", (W+H)//1000)
-        draw_obj.polygon([(W//5 - W//100, H//5),
-                        (W//5 + W//100, H//5),
-                        (W//5, H//5 - H//100)], "black")
-        draw_obj.polygon([(4*W//5, 4*H//5 - H//100),
-                        (4*W//5, 4*H//5 + H//100),
-                        (4*W//5 + H//100, 4*H//5)], "black")
-        _, _, w, h = draw_obj.textbbox((0, 0), x_label, font=font)
-        draw_obj.text((W//2 - w/2, 4*H//5 + H//25 -h/2),
-                    text=x_label, fill="black", font=font)
+        draw_obj.line([(self.W//5, self.H//5), (self.W//5, 4*self.H//5), (4*self.W//5, 4*self.H//5)], "black", (self.W+self.H)//1000)
+        draw_obj.polygon([(self.W//5 - self.W//100, self.H//5),
+                        (self.W//5 + self.W//100, self.H//5),
+                        (self.W//5, self.H//5 - self.H//100)], "black")
+        draw_obj.polygon([(4*self.W//5, 4*self.H//5 - self.H//100),
+                        (4*self.W//5, 4*self.H//5 + self.H//100),
+                        (4*self.W//5 + self.H//100, 4*self.H//5)], "black")
+        _, _, w, h = draw_obj.textbbox((0, 0), self.x_label, font=font)
+        draw_obj.text((self.W//2 - w/2, 4*self.H//5 + self.H//25 -h/2),
+                    text=self.x_label, fill="black", font=font)
         # Vertical text
-        v = Image.new("RGBA", (W//5, H//5), (255, 0, 0, 0))
+        v = Image.new("RGBA", (self.W//5, self.H//5), (255, 0, 0, 0))
         v_draw = ImageDraw.Draw(v)
-        _, _, w, h = v_draw.textbbox((0, 0), y_label, font=font)
-        v_draw.text(((W//5-w)/2, (H//5-h)/2), text=y_label, fill="black", font=font)
-        v = v.rotate(90, center=(W//10, H//10))
-        image.paste(v, (2*W//50, 2*H//5), v)
+        _, _, w, h = v_draw.textbbox((0, 0), self.y_label, font=font)
+        v_draw.text(((self.W//5-w)/2, (self.H//5-h)/2), text=self.y_label, fill="black", font=font)
+        v = v.rotate(90, center=(self.W//10, self.H//10))
+        self.image.paste(v, (2*self.W//50, 2*self.H//5), v)
 
         # Ticks
-        xticks = [self.round_to_1(xt*xmax/5, xmax) for xt in range(5)]
+        xticks = [self.round_to_1(xt*self.xmax/5, self.xmax) for xt in range(5)]
         for xt in xticks:
             # Determine text box size
             _, _, w, h = draw_obj.textbbox((0, 0), str(xt), font=font)
             t = Image.new("RGBA", (w, h), (255, 0, 0, 0))
             t_draw = ImageDraw.Draw(t)
             t_draw.text((0, 0), text=str(xt), fill="black", font=font)
-            image.paste(t, self.graph_space_projection((W//5, H//5), (3*W//5, 3*H//5), (xmin, xmax), (ymin, ymax), (xt, 0), t.size, (0, t.height//2)), t)
-        yticks = [self.round_to_1(yt*ymax/5, ymax) for yt in range(5)]
+            self.image.paste(t, self.graph_space_projection((self.W//5, self.H//5),
+                                                            (3*self.W//5, 3*self.H//5),
+                                                            (self.xmin, self.xmax),
+                                                            (self.ymin, self.ymax),
+                                                            (xt, 0),
+                                                            t.size,
+                                                            (0, t.height//2)), t)
+        yticks = [self.round_to_1(yt*self.ymax/5, self.ymax) for yt in range(5)]
         for yt in yticks:
             # Determine text box size
             _, _, w, h = draw_obj.textbbox((0, 0), str(yt), font=font)
             t = Image.new("RGBA", (w, h), (255, 0, 0, 0))
             t_draw = ImageDraw.Draw(t)
             t_draw.text((0, 0), text=str(yt), fill="black", font=font)
-            image.paste(t, self.graph_space_projection((W//5, H//5), (3*W//5, 3*H//5), (xmin, xmax), (ymin, ymax), (0, yt), t.size, (-t.width//2, 0)), t)
+            self.image.paste(t, self.graph_space_projection((self.W//5, self.H//5),
+                                                            (3*self.W//5, 3*self.H//5),
+                                                            (self.xmin, self.xmax), (self.ymin, self.ymax),
+                                                            (0, yt),
+                                                            t.size,
+                                                            (-t.width//2, 0)), t)
+
+    def legend(self):
+        font = ImageFont.truetype("DejaVuSans.ttf", (self.W+self.H)//100)
+        draw_obj = ImageDraw.Draw(self.image)
 
         # Legend
         _, _, w, h = draw_obj.textbbox((0, 0), "legend", font=font)
-        draw_obj.text((4*W//5 + W//10 - w/2, H//5 + H//50 - h/2), text="legend", fill="black", font=font)
-        for n, (k, v) in enumerate(markers.items()):
-            marker = Image.new("RGBA", (W//25, H//25), (255, 0, 0, 0))
+        draw_obj.text((4*self.W//5 + self.W//10 - w/2, self.H//5 + self.H//50 - h/2), text="legend", fill="black", font=font)
+        for n, (k, v) in enumerate(self.markers.items()):
+            marker = Image.new("RGBA", (self.W//25, self.H//25), (255, 0, 0, 0))
             cat = [Head(),
                 Mouth(),
                 LeftCheek(),
@@ -143,17 +186,18 @@ class BubbleChart():
                 ]
             for layer in cat:
                 marker = layer.set_pattern(v).draw(marker)
-            image.paste(marker,
-                    (4*W//5 + 4*W//50, H//5 + 3*H//50 + n*4*H//50),
+            self.image.paste(marker,
+                    (4*self.W//5 + 4*self.W//50, self.H//5 + 3*self.H//50 + n*4*self.H//50),
                     marker)
-            _, _, w, h = draw_obj.textbbox((0, 0), f"{k} {m_label}", font=font)
-            draw_obj.text((4*W//5 + W//10 - w/2, 3*H//10 + n*4*H//50 - h/2), text=f"{k} {m_label}", fill="black", font=font)
+            _, _, w, h = draw_obj.textbbox((0, 0), f"{k} {self.m_label}", font=font)
+            draw_obj.text((4*self.W//5 + self.W//10 - w/2, 3*self.H//10 + n*4*self.H//50 - h/2), text=f"{k} {self.m_label}", fill="black", font=font)
 
         # Title
-        _, _, w, h = draw_obj.textbbox((0, 0), title, font=font)
-        draw_obj.text((W//2 - w/2, H//10 - h/2), text=title, fill="black", font=font)
+        _, _, w, h = draw_obj.textbbox((0, 0), self.title, font=font)
+        draw_obj.text((self.W//2 - w/2, self.H//10 - h/2), text=self.title, fill="black", font=font)
 
-        image.save("bubblechart.png")
+class HeatMap(BubbleChart):
+    pass
 
 df = (
     data("mtcars")
@@ -173,4 +217,4 @@ BubbleChart(
     m_label = "cylinders",
     title = "mtcars: horsepower vs. displacement",
     W = 500,
-    H = 500)
+    H = 500).image.save("bubblechart.png")
