@@ -326,9 +326,35 @@ class Cat:
         return pattern
     def set_mood(self, mood_name=None, openness = None, turn = None, squint = None, dilation = None, droopiness = None):
         if type(mood_name) is list:
+            # Mix moods assuming they have equal weight
+            # You can double a mood's weight by putting it in the list twice
             avg = dict()
             for k in self.mood_dict["neutral"]:
                 avg[k] = sum(self.mood_dict[m][k] for m in mood_name)/len(mood_name)
+            for key in avg:
+                setattr(self, key, avg[key])
+        elif type(mood_name) is dict:
+            # Allows you to use a dictionary to mix moods with weights
+            # Normalize data so that weights total to 1
+            for m in mood_name:
+                if mood_name[m] <= 0:
+                    del mood_name[m]
+            msum = sum(mood_name[k] for k in mood_name)
+            if msum > 1:
+                for k in mood_name:
+                    mood_name[k] /= msum
+            elif msum < 1:
+                if "neutral" in mood_name:
+                    for k in mood_name:
+                        mood_name[k] /= msum
+                else:
+                    # If neutral not there, assume it makes up the rest
+                    mood_name["neutral"] = 1-msum
+            # Iterate through each mood key, calculating the weighted
+            # mean of each
+            avg = dict()
+            for k in self.mood_dict["neutral"]:
+                avg[k] = sum(self.mood_dict[m][k]*mood_name[m] for m in mood_name)
             for key in avg:
                 setattr(self, key, avg[key])
         elif mood_name is not None:
