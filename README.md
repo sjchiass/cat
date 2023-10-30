@@ -8,6 +8,10 @@
 
 !["Various moods"](./mood_collage.png)
 
+## Graphs
+
+!["A bubble chart"](./bubblechart.png)
+
 # TODO
 
   * Add brown tabby
