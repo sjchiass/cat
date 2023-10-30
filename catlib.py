@@ -393,6 +393,15 @@ class Head(Cat):
         composite = Image.composite(im, self.get_pattern(im), mask)
         return composite
 
+# A full background
+class Block(Cat):
+    def __init__(self):
+        super().__init__()
+    def draw(self, im):
+        im = im.copy()
+        im.paste(self.get_pattern(im))
+        return im
+
 # Mouth
 class Mouth(Head):
     def __init__(self, 
