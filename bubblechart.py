@@ -190,36 +190,11 @@ class BubbleChart():
                     (4*self.W//5 + 4*self.W//50, self.H//5 + 3*self.H//50 + n*4*self.H//50),
                     marker)
             _, _, w, h = draw_obj.textbbox((0, 0), f"{k} {self.m_label}", font=font)
-            draw_obj.text((4*self.W//5 + self.W//10 - w/2, 3*self.H//10 + n*4*self.H//50 - h/2), text=f"{k} {self.m_label}", fill="black", font=font)
+            draw_obj.text((4*self.W//5 + self.W//10 - w/2, 3*self.H//10 + n*4*self.H//50), text=f"{k} {self.m_label}", fill="black", font=font)
 
         # Title
         _, _, w, h = draw_obj.textbbox((0, 0), self.title, font=font)
         draw_obj.text((self.W//2 - w/2, self.H//10 - h/2), text=self.title, fill="black", font=font)
-
-df = (
-    data("mtcars")
-    [["hp", "disp", "mpg", "cyl"]]
-    .sort_values("mpg", ascending=False)
-    )
-
-BubbleChart(
-    x = df.hp.tolist(),
-    y = df.disp.tolist(),
-    a = df.mpg.tolist(),
-    m = df.cyl.tolist(),
-    p = ["orange tabby", "grey tabby", "calico"],
-    x_label = "horsepower",
-    y_label = "displacement",
-    a_label = "",
-    m_label = "cylinders",
-    title = "mtcars: horsepower vs. displacement",
-    W = 500,
-    H = 500).image.save("bubblechart.png")
-
-df = (
-    data("mtcars")
-    .corr()
-)
 
 class HeatMap(BubbleChart):
     def __init__(self,
@@ -245,21 +220,40 @@ class HeatMap(BubbleChart):
         self.x_label = [str(x_label) for x_label in self.x_label]
         self.y_label = [str(y_label) for y_label in self.y_label]
 
+        # Determine centre values for each mood
+        m_range = m_lim[1] - m_lim[0]
+        self.step = m_range / (len(moods)-1)
+        self.mood_values = [m_lim[0]+x*self.step for x in range(len(moods))]
+
         self.image = Image.new("RGBA", (W, H), (255, 255, 255))
         
         self.data()
         self.axes()
-        # self.legend()
+        self.legend()
     
     def data(self):
         # Draw data
         for _x in range(self.XY.shape[1]):
             for _y in range(self.XY.shape[0]):
-                if self.XY[_x, _y] < 0:
-                    mood = {"scared" : -self.XY[_x, _y]}
-                else:
-                    mood = {"angry" : self.XY[_x, _y]}
-                self.image = self.draw_datapoint(self.image, _x, _y, self.XY.shape[1], self.XY.shape[0], mood)
+                value = self.XY[_x, _y]
+                for n, (mood, threshold) in enumerate(zip(self.moods, self.mood_values)):
+                    # Easy case: the current value in the matrix matches a threshold
+                    # Use the mood from the threshold
+                    if value == threshold:
+                        self.image = self.draw_datapoint(self.image, _x, _y, self.XY.shape[1], self.XY.shape[0], mood)
+                        break
+                    # Mixed case: the value is between two thresholds
+                    # We need to mix the two in the right proportions
+                    # The farther the current value is from the threshold,
+                    # the lower the first mood's weight. If the value is
+                    # the same as the threshold, it gets all the weight.
+                    # For the second mood, the opposite is true.
+                    elif value < threshold:
+                        w_mood = {mood : 1-(threshold-value)/self.step,
+                                  self.moods[n-1] : (threshold-value)/self.step}
+                        print(w_mood)
+                        self.image = self.draw_datapoint(self.image, _x, _y, self.XY.shape[1], self.XY.shape[0], w_mood)
+                        break
 
     # Drawing a datapoint is creating a small cat image and pasting it
     # in the right place
@@ -308,7 +302,7 @@ class HeatMap(BubbleChart):
             t_draw.text((0, 0), text=str(xt), fill="black", font=font)
             self.image.paste(t,
                              (self.W//5 + n*3*self.W//5//xmax,
-                              self.H//5 - h),
+                              self.H//5 - self.H//100 - h//2),
                               t)
             self.image.paste(t,
                              (self.W//5 + n*3*self.W//5//xmax,
@@ -330,6 +324,64 @@ class HeatMap(BubbleChart):
                               self.H//5 + n*3*self.H//5//ymax + h),
                               t)
 
+    def legend(self):
+        font = ImageFont.truetype("DejaVuSans.ttf", (self.W+self.H)//100)
+        draw_obj = ImageDraw.Draw(self.image)
+
+        # Legend
+        _, _, w, h = draw_obj.textbbox((0, 0), "legend", font=font)
+        draw_obj.text((4*self.W//5 + self.W//10 - w/2, self.H//5 + self.H//50 - h/2), text="legend", fill="black", font=font)
+        for n, (m, v) in enumerate(zip(self.moods, self.mood_values)):
+            k = "0"
+            marker = Image.new("RGBA", (self.W//25, self.H//25), (255, 0, 0, 0))
+            cat = [Head(),
+                Mouth(),
+                LeftCheek(),
+                RightCheek(),
+                Nose(),
+                LeftEar(),
+                RightEar(),
+                LeftEye(),
+                RightEye()
+                ]
+            for layer in cat:
+                marker = layer.set_pattern(self.pattern).set_mood(m).draw(marker)
+            self.image.paste(marker,
+                    (4*self.W//5 + 4*self.W//50, self.H//5 + 3*self.H//50 + n*4*self.H//50),
+                    marker)
+            _, _, w, h = draw_obj.textbbox((0, 0), f"{m} {v}", font=font)
+            draw_obj.text((4*self.W//5 + self.W//10 - w/2, 3*self.H//10 + n*4*self.H//50),
+                          text=f"{m} {v}", fill="black", font=font)
+
+        # Title
+        _, _, w, h = draw_obj.textbbox((0, 0), self.title, font=font)
+        draw_obj.text((self.W//2 - w/2, self.H//10 - h/2), text=self.title, fill="black", font=font)
+
+df = (
+    data("mtcars")
+    [["hp", "disp", "mpg", "cyl"]]
+    .sort_values("mpg", ascending=False)
+    )
+
+BubbleChart(
+    x = df.hp.tolist(),
+    y = df.disp.tolist(),
+    a = df.mpg.tolist(),
+    m = df.cyl.tolist(),
+    p = ["orange tabby", "grey tabby", "calico"],
+    x_label = "horsepower",
+    y_label = "displacement",
+    a_label = "",
+    m_label = "cylinders",
+    title = "mtcars: horsepower vs. displacement",
+    W = 500,
+    H = 500).image.save("bubblechart.png")
+
+df = (
+    data("mtcars")
+    .corr()
+)
+
 HeatMap(XY=df.values,
         x_label=df.index,
         y_label=df.columns,
@@ -337,5 +389,5 @@ HeatMap(XY=df.values,
         moods=["scared", "neutral", "angry"],
         pattern="orange tabby",
         title="Correlation of mtcars",
-        W=2500,
-        H=2500).image.save("heatmap.png")
+        W=1000,
+        H=1000).image.save("heatmap.png")
