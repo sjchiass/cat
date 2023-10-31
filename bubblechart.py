@@ -84,7 +84,7 @@ class BubbleChart():
         self.W = W
         self.H = H
 
-        self.m = [str(self.m) for self.m in self.m]
+        self.m = [str(m) for m in self.m]
 
         self.markers = dict()
         m_list = np.unique(self.m)
@@ -196,9 +196,6 @@ class BubbleChart():
         _, _, w, h = draw_obj.textbbox((0, 0), self.title, font=font)
         draw_obj.text((self.W//2 - w/2, self.H//10 - h/2), text=self.title, fill="black", font=font)
 
-class HeatMap(BubbleChart):
-    pass
-
 df = (
     data("mtcars")
     [["hp", "disp", "mpg", "cyl"]]
@@ -218,3 +215,127 @@ BubbleChart(
     title = "mtcars: horsepower vs. displacement",
     W = 500,
     H = 500).image.save("bubblechart.png")
+
+df = (
+    data("mtcars")
+    .corr()
+)
+
+class HeatMap(BubbleChart):
+    def __init__(self,
+                 XY,
+                 x_label,
+                 y_label,
+                 m_lim,
+                 moods,
+                 pattern, 
+                 title,
+                 W,
+                 H):
+        self.XY = XY
+        self.x_label = x_label
+        self.y_label = y_label
+        self.m_lim = m_lim
+        self.moods = moods
+        self.pattern = pattern
+        self.title = title
+        self.W = W
+        self.H = H
+
+        self.x_label = [str(x_label) for x_label in self.x_label]
+        self.y_label = [str(y_label) for y_label in self.y_label]
+
+        self.image = Image.new("RGBA", (W, H), (255, 255, 255))
+        
+        self.data()
+        self.axes()
+        # self.legend()
+    
+    def data(self):
+        # Draw data
+        for _x in range(self.XY.shape[1]):
+            for _y in range(self.XY.shape[0]):
+                if self.XY[_x, _y] < 0:
+                    mood = {"scared" : -self.XY[_x, _y]}
+                else:
+                    mood = {"angry" : self.XY[_x, _y]}
+                self.image = self.draw_datapoint(self.image, _x, _y, self.XY.shape[1], self.XY.shape[0], mood)
+
+    # Drawing a datapoint is creating a small cat image and pasting it
+    # in the right place
+    def draw_datapoint(self, im, x, y, xmax, ymax, mood):
+        im = im.copy()
+        # Data values affect marker area, so a data point 25% the value
+        # of another is 50% its width and 50% is height.
+        marker = Image.new("RGBA", (3*self.W//5//xmax, 3*self.H//5//ymax), (255, 0, 0, 0))
+        cat = [Head(),
+            Mouth(),
+            LeftCheek(),
+            RightCheek(),
+            Nose(),
+            LeftEar(),
+            RightEar(),
+            LeftEye(),
+            RightEye()
+            ]
+        for layer in cat:
+            marker = layer.set_pattern(self.pattern).set_mood(mood).draw(marker)
+            
+        im.paste(marker, (self.W//5 + x*3*self.W//5//xmax,
+                          self.H//5 + y*3*self.H//5//ymax), marker)
+        return im
+
+    def axes(self):
+        font = ImageFont.truetype("DejaVuSans.ttf", (self.W+self.H)//100)
+        draw_obj = ImageDraw.Draw(self.image)
+
+        # Axes
+        draw_obj.line([(self.W//5, self.H//5),
+                       (self.W//5, 4*self.H//5),
+                       (4*self.W//5, 4*self.H//5),
+                       (4*self.W//5, self.H//5),
+                       (self.W//5, self.H//5)],
+                       "black", (self.W+self.H)//1000)
+
+        # Ticks
+        xmax = len(self.x_label)
+        ymax = len(self.y_label)
+        for n, xt in enumerate(self.x_label):
+            # Determine text box size
+            _, _, w, h = draw_obj.textbbox((0, 0), str(xt), font=font)
+            t = Image.new("RGBA", (w, h), (255, 0, 0, 0))
+            t_draw = ImageDraw.Draw(t)
+            t_draw.text((0, 0), text=str(xt), fill="black", font=font)
+            self.image.paste(t,
+                             (self.W//5 + n*3*self.W//5//xmax,
+                              self.H//5 - h),
+                              t)
+            self.image.paste(t,
+                             (self.W//5 + n*3*self.W//5//xmax,
+                              4*self.H//5),
+                              t)
+        
+        for n, yt in enumerate(self.y_label):
+            # Determine text box size
+            _, _, w, h = draw_obj.textbbox((0, 0), str(yt), font=font)
+            t = Image.new("RGBA", (w, h), (255, 0, 0, 0))
+            t_draw = ImageDraw.Draw(t)
+            t_draw.text((0, 0), text=str(yt), fill="black", font=font)
+            self.image.paste(t,
+                             (self.W//5 - w,
+                              self.H//5 + n*3*self.H//5//ymax + h),
+                              t)
+            self.image.paste(t,
+                             (4*self.W//5,
+                              self.H//5 + n*3*self.H//5//ymax + h),
+                              t)
+
+HeatMap(XY=df.values,
+        x_label=df.index,
+        y_label=df.columns,
+        m_lim=[-1, 1],
+        moods=["scared", "neutral", "angry"],
+        pattern="orange tabby",
+        title="Correlation of mtcars",
+        W=2500,
+        H=2500).image.save("heatmap.png")
