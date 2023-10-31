@@ -12,6 +12,8 @@
 
 !["A bubble chart"](./bubblechart.png)
 
+!["A heatmap chart"](./heatmap.png)
+
 # TODO
 
   * Add brown tabby
