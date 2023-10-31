@@ -349,9 +349,9 @@ class HeatMap(BubbleChart):
             self.image.paste(marker,
                     (4*self.W//5 + 4*self.W//50, self.H//5 + 3*self.H//50 + n*4*self.H//50),
                     marker)
-            _, _, w, h = draw_obj.textbbox((0, 0), f"{m} {v}", font=font)
+            _, _, w, h = draw_obj.textbbox((0, 0), f"{v} = {m}", font=font)
             draw_obj.text((4*self.W//5 + self.W//10 - w/2, 3*self.H//10 + n*4*self.H//50),
-                          text=f"{m} {v}", fill="black", font=font)
+                          text=f"{v} = {m}", fill="black", font=font)
 
         # Title
         _, _, w, h = draw_obj.textbbox((0, 0), self.title, font=font)
@@ -369,13 +369,13 @@ BubbleChart(
     a = df.mpg.tolist(),
     m = df.cyl.tolist(),
     p = ["orange tabby", "grey tabby", "calico"],
-    x_label = "horsepower",
-    y_label = "displacement",
+    x_label = "chocolate (lbs)",
+    y_label = "visitors",
     a_label = "",
-    m_label = "cylinders",
-    title = "mtcars: horsepower vs. displacement",
-    W = 500,
-    H = 500).image.save("bubblechart.png")
+    m_label = "pumpkins",
+    title = "Trick or treaters",
+    W = 1000,
+    H = 1000).image.save("bubblechart.png")
 
 df = (
     data("mtcars")
@@ -388,6 +388,6 @@ HeatMap(XY=df.values,
         m_lim=[-1, 1],
         moods=["scared", "neutral", "angry"],
         pattern="orange tabby",
-        title="Correlation of mtcars",
+        title="Correlation matrix: ghosts!",
         W=1000,
         H=1000).image.save("heatmap.png")
