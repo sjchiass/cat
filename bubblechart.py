@@ -39,16 +39,9 @@ class BubbleChart():
     def round_to_1(x, max):
         return int(round(x, -int(math.floor(math.log10(abs(max))))))
 
-    # Drawing a datapoint is creating a small cat image and pasting it
-    # in the right place
-    def draw_datapoint(self, im, x, y, a, pattern):
-        im = im.copy()
-        # Data values affect marker area, so a data point 25% the value
-        # of another is 50% its width and 50% is height.
-        marker = Image.new("RGBA",
-                        (int(im.width/10*math.sqrt(a/self.amax)),
-                            int(im.height/10*math.sqrt(a/self.amax))),
-                            (255, 0, 0, 0))
+    # Make a marker image to paste in the graphing area
+    def create_marker(self, mood, pattern, w, h):
+        marker = Image.new("RGBA", (w, h), (255, 0, 0, 0))
         cat = [Head(),
             Mouth(),
             LeftCheek(),
@@ -60,7 +53,14 @@ class BubbleChart():
             RightEye()
             ]
         for layer in cat:
-            marker = layer.set_pattern(pattern).draw(marker)
+            marker = layer.set_pattern(pattern).set_mood(mood).draw(marker)
+        
+        return marker
+
+    # Drawing a datapoint is creating a small cat image and pasting it
+    # in the right place
+    def draw_datapoint(self, im, x, y, marker):
+        im = im.copy()
             
         im.paste(marker, self.graph_space_projection((self.W//5, self.H//5),
                                                      (3*self.W//5, 3*self.H//5),
@@ -83,6 +83,7 @@ class BubbleChart():
         self.title = title
         self.W = W
         self.H = H
+        self.mood = "neutral"
 
         self.m = [str(m) for m in self.m]
 
@@ -111,7 +112,12 @@ class BubbleChart():
     def data(self):
         # Draw data
         for _x, _y, _a, _m in zip(self.x, self.y, self.a, self.m):
-            self.image = self.draw_datapoint(self.image, _x, _y, _a, self.markers[_m])
+            # Data values affect marker area, so a data point 25% the value
+            # of another is 50% its width and 50% its height.
+            marker = self.create_marker(self.mood, self.markers[_m],
+                                        int(self.W/10*math.sqrt(_a/self.amax)),
+                                        int(self.H/10*math.sqrt(_a/self.amax)))
+            self.image = self.draw_datapoint(self.image, _x, _y, marker)
 
     def axes(self):
         font = ImageFont.truetype("DejaVuSans.ttf", (self.W+self.H)//100)
@@ -217,6 +223,14 @@ class HeatMap(BubbleChart):
         self.W = W
         self.H = H
 
+        self.xmin = -0.5
+        self.xmax = self.XY.shape[0]-0.5
+        self.ymin = -0.5
+        self.ymax = self.XY.shape[1]-0.5
+
+        self.marker_w = int(3*self.W//5//self.xmax)
+        self.marker_h = int(3*self.H//5//self.ymax)
+
         self.x_label = [str(x_label) for x_label in self.x_label]
         self.y_label = [str(y_label) for y_label in self.y_label]
 
@@ -236,11 +250,15 @@ class HeatMap(BubbleChart):
         for _x in range(self.XY.shape[1]):
             for _y in range(self.XY.shape[0]):
                 value = self.XY[_x, _y]
+                # The heatmap starts at the top-left rather than the bottom-left
+                # like a typical scatter plot
+                flipped_y = self.XY.shape[1]-_y-1
                 for n, (mood, threshold) in enumerate(zip(self.moods, self.mood_values)):
                     # Easy case: the current value in the matrix matches a threshold
                     # Use the mood from the threshold
                     if value == threshold:
-                        self.image = self.draw_datapoint(self.image, _x, _y, self.XY.shape[1], self.XY.shape[0], mood)
+                        marker = self.create_marker(mood, self.pattern, self.marker_w, self.marker_h)
+                        self.image = self.draw_datapoint(self.image, _x, flipped_y, marker)
                         break
                     # Mixed case: the value is between two thresholds
                     # We need to mix the two in the right proportions
@@ -251,33 +269,9 @@ class HeatMap(BubbleChart):
                     elif value < threshold:
                         w_mood = {mood : 1-(threshold-value)/self.step,
                                   self.moods[n-1] : (threshold-value)/self.step}
-                        print(w_mood)
-                        self.image = self.draw_datapoint(self.image, _x, _y, self.XY.shape[1], self.XY.shape[0], w_mood)
+                        marker = self.create_marker(w_mood, self.pattern, self.marker_w, self.marker_h)
+                        self.image = self.draw_datapoint(self.image, _x, flipped_y, marker)
                         break
-
-    # Drawing a datapoint is creating a small cat image and pasting it
-    # in the right place
-    def draw_datapoint(self, im, x, y, xmax, ymax, mood):
-        im = im.copy()
-        # Data values affect marker area, so a data point 25% the value
-        # of another is 50% its width and 50% is height.
-        marker = Image.new("RGBA", (3*self.W//5//xmax, 3*self.H//5//ymax), (255, 0, 0, 0))
-        cat = [Head(),
-            Mouth(),
-            LeftCheek(),
-            RightCheek(),
-            Nose(),
-            LeftEar(),
-            RightEar(),
-            LeftEye(),
-            RightEye()
-            ]
-        for layer in cat:
-            marker = layer.set_pattern(self.pattern).set_mood(mood).draw(marker)
-            
-        im.paste(marker, (self.W//5 + x*3*self.W//5//xmax,
-                          self.H//5 + y*3*self.H//5//ymax), marker)
-        return im
 
     def axes(self):
         font = ImageFont.truetype("DejaVuSans.ttf", (self.W+self.H)//100)
