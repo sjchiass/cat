@@ -21,6 +21,14 @@
   * Add paws
   * Add special things
 
+# Rough requirements
+
+Pillow is the minimum dependency required. The other packages are used for generating graphs. `librosa` is for working with sound.
+
+`pillow matplotlib pandas numpy librosa`
+
+If you want to make videos, also install ffmpeg on your system (ffmpeg is not a Python library).
+
 # Development log
 
 This code was written in increments. Each step was either the adding of a new feature or the reorganizing of code to make it cleaer, simpler or more flexible.
